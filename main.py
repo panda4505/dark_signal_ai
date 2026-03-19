@@ -549,6 +549,11 @@ def home():
                 padding: 24px;
             }
 
+            .composer {
+                display: flex;
+                flex-direction: column;
+            }
+
             .content-grid {
                 display: grid;
                 gap: 24px;
@@ -653,8 +658,8 @@ def home():
             .drop-zone {
                 margin-top: 16px;
                 border-radius: 12px;
-                border: 1px solid var(--field-border);
-                background: var(--field-bg);
+                border: 1px dashed rgba(139, 92, 246, 0.35);
+                background: rgba(139, 92, 246, 0.06);
                 padding: 12px 16px;
                 cursor: pointer;
                 transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
@@ -756,6 +761,15 @@ def home():
                 transform: translateY(-1px);
             }
 
+            .button-processing {
+                animation: pulse-glow 1.8s ease-in-out infinite;
+                background: rgba(0, 243, 255, 0.08);
+                border-color: rgba(0, 243, 255, 0.30);
+                color: var(--cyan);
+                cursor: wait;
+                pointer-events: none;
+            }
+
             .secondary-button {
                 background: rgba(255, 255, 255, 0.05);
                 border: 1px solid rgba(255, 255, 255, 0.10);
@@ -842,6 +856,20 @@ def home():
                 flex-direction: column;
             }
 
+            .typing-dots::after {
+                content: "";
+                animation: dots 1.2s steps(1) infinite;
+            }
+
+            pre.typing-dots::after {
+                content: none;
+                animation: none;
+            }
+
+            .output-ready {
+                animation: fade-in-text 0.4s ease both;
+            }
+
             @keyframes card-enter {
                 from {
                     opacity: 0;
@@ -861,6 +889,23 @@ def home():
             @keyframes blink {
                 0%, 50% { opacity: 1; }
                 51%, 100% { opacity: 0; }
+            }
+
+            @keyframes pulse-glow {
+                0%, 100% { box-shadow: inset 0 0 24px rgba(0, 243, 255, 0.05), 0 0 20px rgba(0, 243, 255, 0.08); }
+                50% { box-shadow: inset 0 0 24px rgba(0, 243, 255, 0.12), 0 0 36px rgba(0, 243, 255, 0.18); }
+            }
+
+            @keyframes dots {
+                0% { content: ""; }
+                25% { content: "."; }
+                50% { content: ".."; }
+                75% { content: "..."; }
+            }
+
+            @keyframes fade-in-text {
+                from { opacity: 0; transform: translateY(6px); }
+                to { opacity: 1; transform: translateY(0); }
             }
 
             @media (max-width: 899px) {
@@ -1020,6 +1065,8 @@ def home():
                 if (e.target.files.length) handleFile(e.target.files[0]);
             });
 
+            output.addEventListener("animationend", () => output.classList.remove("output-ready"));
+
             async function handleFile(file) {
                 dropZone.classList.add("busy");
                 dropZone.innerHTML = `
@@ -1060,8 +1107,12 @@ def home():
                 if (!prompt.trim()) return;
 
                 btn.disabled = true;
-                btn.textContent = "Processing...";
-                output.textContent = "Running analysis...";
+                btn.classList.add("button-processing");
+                btn.innerHTML = '<span class="typing-dots">Analyzing</span>';
+                output.classList.remove("output-ready");
+                output.classList.add("typing-dots");
+                output.textContent = "";
+                output.innerHTML = '<span class="typing-dots">Processing your request</span>';
                 setResponseState("Analyzing", "busy");
 
                 const body = { prompt };
@@ -1081,10 +1132,13 @@ def home():
                 } else {
                     output.textContent = data.answer || data.error;
                 }
+                output.classList.remove("typing-dots");
+                btn.classList.remove("button-processing");
+                output.classList.add("output-ready");
                 setResponseState("Response ready", "ready");
 
-                btn.disabled = false;
                 btn.textContent = "Run Analysis";
+                btn.disabled = false;
             }
         </script>
     </body>
