@@ -785,11 +785,27 @@ def home():
                 margin-bottom: 16px;
             }
 
+            .output-controls {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
             .output-title {
                 font-size: 22px;
                 letter-spacing: -0.02em;
                 font-weight: 600;
                 color: var(--text-primary);
+            }
+
+            .copy-button {
+                width: auto;
+                padding: 8px 12px;
+                border-radius: 10px;
+                font-size: 11px;
+                line-height: 1;
+                box-shadow: none;
+                flex-shrink: 0;
             }
 
             pre {
@@ -966,6 +982,10 @@ def home():
                     flex-wrap: wrap;
                 }
 
+                .output-controls {
+                    flex-wrap: wrap;
+                }
+
                 pre {
                     min-height: 320px;
                 }
@@ -1030,7 +1050,10 @@ def home():
                             <div class="section-label">Response Feed</div>
                             <div class="output-title">Model Output</div>
                         </div>
-                        <div id="response-state" class="signal idle">Standing by</div>
+                        <div class="output-controls">
+                            <div id="response-state" class="signal idle">Standing by</div>
+                            <button type="button" id="copy-output-btn" class="secondary-button copy-button">Copy</button>
+                        </div>
                     </div>
                     <pre id="output">Your answer will appear here.</pre>
                 </section>
@@ -1047,6 +1070,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const output = document.getElementById("output");
     const promptInput = document.getElementById("prompt");
     const sendButton = document.getElementById("send-btn");
+    const copyButton = document.getElementById("copy-output-btn");
     const fileInput = document.getElementById("file-input");
 
     function escapeHtml(text) {
@@ -1069,6 +1093,21 @@ document.addEventListener("DOMContentLoaded", () => {
     function setResponseState(text, stateClass) {
         responseState.textContent = text;
         responseState.className = "signal " + stateClass;
+    }
+
+    let copyResetTimer = null;
+
+    function setCopyButtonLabel(text) {
+        copyButton.textContent = text;
+        if (copyResetTimer) {
+            clearTimeout(copyResetTimer);
+        }
+        if (text !== "Copy") {
+            copyResetTimer = setTimeout(() => {
+                copyButton.textContent = "Copy";
+                copyResetTimer = null;
+            }, 1200);
+        }
     }
 
     async function handleFile(file) {
@@ -1155,6 +1194,19 @@ document.addEventListener("DOMContentLoaded", () => {
         if (e.target.files.length) handleFile(e.target.files[0]);
     });
     sendButton.addEventListener("click", sendPrompt);
+    copyButton.addEventListener("click", async () => {
+        const text = output.textContent.trim();
+        if (!text || text === "Your answer will appear here.") {
+            setCopyButtonLabel("Empty");
+            return;
+        }
+        try {
+            await navigator.clipboard.writeText(text);
+            setCopyButtonLabel("Copied");
+        } catch (error) {
+            setCopyButtonLabel("Failed");
+        }
+    });
 });
 </script>
     </body>
