@@ -4,12 +4,19 @@ from pydantic import BaseModel
 from openai import OpenAI
 from dotenv import load_dotenv
 from openpyxl import load_workbook
+import base64
 import fitz
+import mimetypes
 import os, tempfile
+import zipfile
+import xml.etree.ElementTree as ET
 
 load_dotenv()
 
 app = FastAPI()
+
+TEXT_MODEL = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
+VISION_MODEL = os.getenv("DEEPSEEK_VISION_MODEL", TEXT_MODEL)
 
 client = OpenAI(
     api_key=os.getenv("DEEPSEEK_API_KEY"),
@@ -39,82 +46,296 @@ class PromptRequest(BaseModel):
     file_name: str | None = None
 
 
-TEXT_FILE_EXTENSIONS = {"csv", "txt", "json", "md"}
-SPREADSHEET_EXTENSIONS = {"xlsx", "xls"}
+TEXT_FILE_EXTENSIONS = {
+    "c", "cfg", "conf", "cpp", "css", "csv", "eml", "go", "html", "htm", "ini",
+    "java", "js", "json", "log", "md", "py", "rb", "rs", "rtf", "sh", "sql",
+    "tex", "toml", "ts", "tsx", "txt", "xml", "yaml", "yml",
+}
+SPREADSHEET_EXTENSIONS = {"xlsx", "xlsm", "xltx", "xltm"}
+WORD_EXTENSIONS = {"docx", "docm"}
+PRESENTATION_EXTENSIONS = {"pptx", "pptm"}
+OPENDOCUMENT_EXTENSIONS = {"odt", "ods", "odp"}
+IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "webp", "bmp", "gif", "tif", "tiff"}
+LEGACY_OFFICE_EXTENSIONS = {"doc", "xls", "ppt"}
 MAX_EXTRACTED_CHARS = 50000
+MAX_IMAGE_BYTES = 8 * 1024 * 1024
 
 
 def limit_text(text: str) -> str:
-    return text[:MAX_EXTRACTED_CHARS]
+    text = text.strip()
+    if len(text) <= MAX_EXTRACTED_CHARS:
+        return text
+
+    suffix = "\n\n[Truncated]"
+    cutoff = max(0, MAX_EXTRACTED_CHARS - len(suffix))
+    return text[:cutoff].rstrip() + suffix
+
+
+def get_extension(file_path: str, file_name: str | None) -> str:
+    name = file_name or file_path
+    return name.rsplit(".", 1)[-1].lower() if "." in name else ""
+
+
+def with_fallback_text(text: str, fallback: str) -> str:
+    return limit_text(text) or fallback
+
+
+def natural_sort_key(text: str):
+    parts = []
+    chunk = ""
+    chunk_is_digit = None
+
+    for char in text:
+        is_digit = char.isdigit()
+        if chunk_is_digit is None or is_digit == chunk_is_digit:
+            chunk += char
+        else:
+            parts.append(int(chunk) if chunk_is_digit else chunk.lower())
+            chunk = char
+        chunk_is_digit = is_digit
+
+    if chunk:
+        parts.append(int(chunk) if chunk_is_digit else chunk.lower())
+
+    return parts
+
+
+def collect_xml_text(element: ET.Element) -> str:
+    parts = []
+
+    for node in element.iter():
+        if node.tag.endswith(("}tab", "}br", "}cr", "}line-break")):
+            parts.append(" ")
+        if node.text:
+            parts.append(node.text)
+
+    return " ".join("".join(parts).split())
 
 
 def extract_pdf_text(file_path: str) -> str:
     with fitz.open(file_path) as doc:
         text = "\n".join(page.get_text() for page in doc)
-    return limit_text(text)
+    return with_fallback_text(text, "[No extractable text found in PDF]")
 
 
 def extract_plain_text(file_path: str) -> str:
     with open(file_path, "r", encoding="utf-8", errors="replace") as f:
-        return limit_text(f.read())
+        return with_fallback_text(f.read(), "[No extractable text found in file]")
 
 
 def extract_spreadsheet_text(file_path: str) -> str:
     workbook = load_workbook(file_path, data_only=True)
-    sections = []
+    try:
+        sections = []
 
-    for sheet in workbook.worksheets:
-        rows = []
-        for row in sheet.iter_rows(values_only=True):
-            values = ["" if value is None else str(value) for value in row]
-            rows.append(",".join(values).rstrip(","))
-        sheet_text = "\n".join(rows).strip()
-        sections.append(f"[Sheet: {sheet.title}]\n{sheet_text}".strip())
+        for sheet in workbook.worksheets:
+            rows = []
+            for row in sheet.iter_rows(values_only=True):
+                values = ["" if value is None else str(value) for value in row]
+                if any(value for value in values):
+                    rows.append(",".join(values).rstrip(","))
+            sheet_text = "\n".join(rows).strip()
+            if sheet_text:
+                sections.append(f"[Sheet: {sheet.title}]\n{sheet_text}")
 
-    workbook.close()
-    return limit_text("\n\n".join(section for section in sections if section))
+        return with_fallback_text(
+            "\n\n".join(sections),
+            "[No extractable text found in spreadsheet]",
+        )
+    finally:
+        workbook.close()
 
 
-def extract_file_text(file_path: str, file_name: str | None) -> str:
-    name = file_name or file_path
-    ext = name.rsplit(".", 1)[-1].lower() if "." in name else ""
+def extract_docx_text(file_path: str) -> str:
+    doc_members = []
+
+    with zipfile.ZipFile(file_path) as archive:
+        for name in archive.namelist():
+            if name == "word/document.xml":
+                doc_members.append(name)
+            elif name.startswith("word/header") and name.endswith(".xml"):
+                doc_members.append(name)
+            elif name.startswith("word/footer") and name.endswith(".xml"):
+                doc_members.append(name)
+            elif name in {"word/comments.xml", "word/footnotes.xml", "word/endnotes.xml"}:
+                doc_members.append(name)
+
+        sections = []
+        for name in sorted(doc_members, key=natural_sort_key):
+            root = ET.fromstring(archive.read(name))
+            paragraphs = []
+            for element in root.iter():
+                if element.tag.endswith("}p"):
+                    text = collect_xml_text(element)
+                    if text:
+                        paragraphs.append(text)
+
+            if paragraphs:
+                label = "Document" if name == "word/document.xml" else name.rsplit("/", 1)[-1].replace(".xml", "")
+                sections.append(f"[{label}]\n" + "\n".join(paragraphs))
+
+    return with_fallback_text("\n\n".join(sections), "[No extractable text found in document]")
+
+
+def extract_presentation_text(file_path: str) -> str:
+    with zipfile.ZipFile(file_path) as archive:
+        slide_members = sorted(
+            [
+                name
+                for name in archive.namelist()
+                if name.startswith("ppt/slides/slide") and name.endswith(".xml")
+            ],
+            key=natural_sort_key,
+        )
+
+        sections = []
+        for index, name in enumerate(slide_members, start=1):
+            root = ET.fromstring(archive.read(name))
+            texts = []
+            for element in root.iter():
+                if element.tag.endswith("}t") and element.text:
+                    chunk = " ".join(element.text.split())
+                    if chunk:
+                        texts.append(chunk)
+
+            if texts:
+                sections.append(f"[Slide {index}]\n" + "\n".join(texts))
+
+    return with_fallback_text("\n\n".join(sections), "[No extractable text found in presentation]")
+
+
+def extract_opendocument_text(file_path: str) -> str:
+    with zipfile.ZipFile(file_path) as archive:
+        if "content.xml" not in archive.namelist():
+            return "[No extractable text found in document]"
+
+        root = ET.fromstring(archive.read("content.xml"))
+        blocks = []
+
+        for element in root.iter():
+            if element.tag.endswith(("}p", "}h", "}list-item", "}table-cell")):
+                text = collect_xml_text(element)
+                if text:
+                    blocks.append(text)
+
+    return with_fallback_text("\n".join(blocks), "[No extractable text found in document]")
+
+
+def build_image_data_url(file_path: str, file_name: str | None) -> str:
+    with open(file_path, "rb") as f:
+        data = f.read()
+
+    if len(data) > MAX_IMAGE_BYTES:
+        raise ValueError("Image files larger than 8 MB are not supported yet.")
+
+    mime_type = mimetypes.guess_type(file_name or file_path)[0] or "application/octet-stream"
+    encoded = base64.b64encode(data).decode("ascii")
+    return f"data:{mime_type};base64,{encoded}"
+
+
+def build_file_context(file_path: str, file_name: str | None) -> dict:
+    ext = get_extension(file_path, file_name)
 
     if ext == "pdf":
-        return extract_pdf_text(file_path)
+        return {"kind": "text", "content": extract_pdf_text(file_path)}
     if ext in TEXT_FILE_EXTENSIONS:
-        return extract_plain_text(file_path)
+        return {"kind": "text", "content": extract_plain_text(file_path)}
     if ext in SPREADSHEET_EXTENSIONS:
-        return extract_spreadsheet_text(file_path)
-    return "[Unsupported file type]"
+        return {"kind": "text", "content": extract_spreadsheet_text(file_path)}
+    if ext in WORD_EXTENSIONS:
+        return {"kind": "text", "content": extract_docx_text(file_path)}
+    if ext in PRESENTATION_EXTENSIONS:
+        return {"kind": "text", "content": extract_presentation_text(file_path)}
+    if ext in OPENDOCUMENT_EXTENSIONS:
+        return {"kind": "text", "content": extract_opendocument_text(file_path)}
+    if ext in IMAGE_EXTENSIONS:
+        return {"kind": "image", "content": build_image_data_url(file_path, file_name)}
+    if ext in LEGACY_OFFICE_EXTENSIONS:
+        return {
+            "kind": "text",
+            "content": (
+                f"[Unsupported legacy Office file type: .{ext}. Please re-save the file as a modern format "
+                "such as .docx, .xlsx, or .pptx.]"
+            ),
+        }
+    return {"kind": "text", "content": "[Unsupported file type]"}
+
+
+def build_request_payload(data: PromptRequest):
+    if not data.file_path:
+        return "none", TEXT_MODEL, [
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": data.prompt},
+        ]
+
+    file_context = build_file_context(data.file_path, data.file_name)
+
+    if file_context["kind"] == "image":
+        return "image", VISION_MODEL, [
+            {
+                "role": "system",
+                "content": (
+                    "You are a helpful assistant. Analyze the uploaded image and answer the user's question. "
+                    "Be honest if the image is blurry or does not contain enough information."
+                ),
+            },
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": (
+                            f"Filename: {data.file_name or '[Uploaded image]'}\n"
+                            f"User question: {data.prompt}"
+                        ),
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": file_context["content"]},
+                    },
+                ],
+            },
+        ]
+
+    return "text", TEXT_MODEL, [
+        {
+            "role": "system",
+            "content": (
+                "You are a helpful assistant. Answer the user's question using the provided file content when it "
+                "is available. If the extracted content says the file is unsupported or no text could be found, "
+                "explain that clearly and suggest a better format when appropriate."
+            ),
+        },
+        {
+            "role": "user",
+            "content": (
+                f"User question:\n{data.prompt}\n\n"
+                f"Filename: {data.file_name or '[No file uploaded]'}\n\n"
+                f"Extracted file content:\n---\n{file_context['content']}\n---"
+            ),
+        },
+    ]
 
 
 @app.post("/ask")
 def ask_ai(data: PromptRequest):
+    file_kind = "none"
     try:
-        extracted_text = ""
-        if data.file_path:
-            extracted_text = extract_file_text(data.file_path, data.file_name)
-
+        file_kind, model_name, messages = build_request_payload(data)
         response = client.chat.completions.create(
-            model="deepseek-chat",
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "You are a helpful assistant. Answer the user's question using the provided file text "
-                        "when available. If the file text says '[Unsupported file type]', explain that the file "
-                        "type is not supported."
-                    ),
-                },
-                {"role": "user", "content": (
-                    f"User question:\n{data.prompt}\n\n"
-                    f"Filename: {data.file_name or '[No file uploaded]'}\n\n"
-                    f"Extracted file text:\n---\n{extracted_text or '[No file uploaded]'}\n---"
-                )}
-            ]
+            model=model_name,
+            messages=messages,
         )
         return {"answer": response.choices[0].message.content}
     except Exception as e:
+        if file_kind == "image":
+            return {
+                "error": (
+                    "Image analysis failed with the configured DeepSeek model. "
+                    "If your current model is text-only, set DEEPSEEK_VISION_MODEL to a vision-capable model. "
+                    f"Details: {e}"
+                )
+            }
         return {"error": str(e)}
 
 
