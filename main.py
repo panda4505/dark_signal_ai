@@ -32,10 +32,12 @@ client = OpenAI(
     base_url="https://api.deepseek.com",
     timeout=API_TIMEOUT_SECONDS,
 )
-openai_client = OpenAI(
-    api_key=os.getenv("OPENAI_API_KEY"),
-    base_url="https://api.openai.com/v1"
-)
+openai_client = None
+if os.getenv("OPENAI_API_KEY"):
+    openai_client = OpenAI(
+        api_key=os.getenv("OPENAI_API_KEY"),
+        base_url="https://api.openai.com/v1"
+    )
 
 # Temp directory for uploaded files
 UPLOAD_DIR = os.path.join(tempfile.gettempdir(), "ai_app_uploads")
@@ -566,6 +568,13 @@ def ask_ai(data: PromptRequest):
     try:
         file_kind, model_name, messages = build_request_payload(data)
         if file_kind == "image":
+            if openai_client is None:
+                return JSONResponse(
+                    status_code=500,
+                    content={
+                        "error": "OPENAI_API_KEY is not configured. Please add it to your environment variables for image analysis."
+                    },
+                )
             response = openai_client.chat.completions.create(
                 model=model_name,
                 messages=messages,
