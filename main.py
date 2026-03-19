@@ -350,6 +350,14 @@ def home():
         <title>My First AI App</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
+            @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap");
+
+            @property --angle {
+                syntax: "<angle>";
+                inherits: false;
+                initial-value: 0deg;
+            }
+
             :root {
                 --page-bg: #05040A;
                 --panel-bg: rgba(255, 255, 255, 0.045);
@@ -448,6 +456,8 @@ def home():
                 -webkit-backdrop-filter: blur(24px);
                 transition: background 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
                 animation: card-enter 0.45s ease both;
+                overflow: hidden;
+                isolation: isolate;
             }
 
             .panel:hover {
@@ -455,113 +465,123 @@ def home():
                 border-color: var(--panel-hover-border);
             }
 
+            .panel::before {
+                content: "";
+                position: absolute;
+                inset: -1px;
+                border-radius: inherit;
+                padding: 1px;
+                background: rgba(139, 92, 246, 0.30);
+                -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+                -webkit-mask-composite: xor;
+                mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+                mask-composite: exclude;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.2s ease;
+            }
+
             .hero { animation-delay: 0s; }
             .composer { animation-delay: 0.08s; }
             .output-panel { animation-delay: 0.16s; }
 
-            .hero {
-                padding: 32px;
-                overflow: hidden;
+            .composer:focus-within::before,
+            .output-panel:has(#response-state.busy)::before,
+            .output-panel:has(#response-state.ready)::before {
+                opacity: 1;
+                background: conic-gradient(from var(--angle), rgba(139, 92, 246, 0.95), rgba(232, 121, 249, 0.92), rgba(139, 92, 246, 0.95));
+                animation: rotate-border 6s linear infinite;
             }
 
-            .hero-layout {
-                display: grid;
-                gap: 24px;
+            .top-bar {
+                padding: 12px 24px;
+                max-height: 56px;
             }
 
-            .hero-header {
+            .topbar-row {
                 display: flex;
                 align-items: center;
-                gap: 18px;
-                flex-wrap: wrap;
+                justify-content: space-between;
+                gap: 16px;
+                min-height: 32px;
             }
 
-            .icon-frame {
-                width: 48px;
-                height: 48px;
-                display: inline-flex;
+            .brand {
+                display: flex;
                 align-items: center;
-                justify-content: center;
-                border-radius: 16px;
-                border: 1px solid rgba(139, 92, 246, 0.30);
-                background: rgba(139, 92, 246, 0.10);
-                box-shadow: 0 0 25px rgba(139, 92, 246, 0.25);
-                color: rgb(232, 121, 249);
+                gap: 12px;
+                min-width: 0;
+            }
+
+            .brand-icon {
+                width: 24px;
+                height: 24px;
+                color: var(--fuchsia);
                 flex-shrink: 0;
             }
 
-            .icon-frame svg {
-                width: 22px;
-                height: 22px;
-            }
-
-            .eyebrow {
-                display: inline-flex;
-                align-items: center;
-                gap: 8px;
-                padding: 8px 12px;
-                border-radius: 999px;
-                text-transform: uppercase;
-                letter-spacing: 0.24em;
-                font-size: 11px;
-                color: var(--text-primary);
-                background: rgba(139, 92, 246, 0.10);
-                border: 1px solid rgba(139, 92, 246, 0.35);
-            }
-
-            .eyebrow::before {
-                content: "";
-                width: 8px;
-                height: 8px;
-                border-radius: 50%;
-                background: var(--fuchsia);
-                box-shadow: 0 0 16px rgba(232, 121, 249, 0.55);
-            }
-
-            h1 {
-                margin-top: 16px;
-                font-size: clamp(2.7rem, 5vw, 4.85rem);
-                line-height: 0.96;
+            .app-title {
+                font-family: "Space Mono", monospace;
+                font-size: 16px;
+                font-weight: 700;
                 letter-spacing: -0.02em;
-                font-weight: 600;
                 color: var(--text-primary);
-                max-width: 11ch;
+                white-space: nowrap;
             }
 
-            .hero-copy {
-                max-width: 720px;
-                font-size: 15px;
-                line-height: 1.7;
-                color: var(--text-secondary);
-            }
-
-            .hero-meta {
+            .topbar-pills {
                 display: flex;
-                flex-wrap: wrap;
-                gap: 12px;
+                align-items: center;
+                justify-content: flex-end;
+                gap: 10px;
+                min-width: 0;
+                flex: 1;
+            }
+
+            .hero,
+            .composer,
+            .output-panel {
+                padding: 24px;
+            }
+
+            .content-grid {
+                display: grid;
+                gap: 24px;
+                align-items: stretch;
+            }
+
+            @media (min-width: 900px) {
+                .content-grid {
+                    grid-template-columns: 45fr 55fr;
+                }
             }
 
             .meta-pill, .signal {
-                display: inline-flex;
+                display: flex;
                 align-items: center;
-                gap: 8px;
+                gap: 12px;
                 border-radius: 999px;
-                padding: 8px 12px;
-                font-size: 11px;
+                padding: 4px 10px;
+                font-family: "Space Mono", monospace;
+                font-size: 10px;
                 letter-spacing: 0.24em;
                 text-transform: uppercase;
                 color: var(--text-primary);
                 background: rgba(139, 92, 246, 0.10);
                 border: 1px solid rgba(139, 92, 246, 0.35);
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
 
             .meta-pill::before, .signal::before {
                 content: "";
-                width: 8px;
-                height: 8px;
+                width: 6px;
+                height: 6px;
                 border-radius: 50%;
                 background: var(--violet);
                 box-shadow: 0 0 16px rgba(139, 92, 246, 0.45);
+                flex-shrink: 0;
             }
 
             .meta-pill.idle::before, .signal.idle::before {
@@ -586,11 +606,6 @@ def home():
                 box-shadow: 0 0 16px rgba(16, 185, 129, 0.45);
             }
 
-            .composer,
-            .output-panel {
-                padding: 28px;
-            }
-
             .section-label {
                 display: block;
                 margin-bottom: 12px;
@@ -598,19 +613,21 @@ def home():
                 font-size: 12px;
                 letter-spacing: 0.22em;
                 text-transform: uppercase;
+                font-family: "Space Mono", monospace;
             }
 
             textarea {
                 width: 100%;
-                min-height: 150px;
-                padding: 18px 20px;
-                font: inherit;
+                min-height: 120px;
+                padding: 16px 18px;
+                font-family: "Inter", system-ui, sans-serif;
                 font-size: 15px;
                 line-height: 1.6;
                 color: var(--text-primary);
                 resize: vertical;
                 border-radius: 16px;
                 border: 1px solid var(--field-border);
+                border-left: 2px solid rgba(139, 92, 246, 0.40);
                 background: var(--field-bg);
                 outline: none;
                 transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
@@ -631,7 +648,7 @@ def home():
                 border-radius: 16px;
                 border: 1px solid var(--field-border);
                 background: var(--field-bg);
-                padding: 24px;
+                padding: 12px 16px;
                 cursor: pointer;
                 transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
             }
@@ -648,59 +665,72 @@ def home():
                 background: rgba(139, 92, 246, 0.08);
             }
 
-            .drop-top {
+            .drop-inline {
                 display: flex;
                 justify-content: space-between;
-                gap: 16px;
+                gap: 12px;
                 align-items: center;
-                margin-bottom: 12px;
+                min-height: 24px;
             }
 
-            .drop-title {
-                font-size: 18px;
-                font-weight: 600;
-                letter-spacing: -0.02em;
-                color: var(--text-primary);
+            .drop-main {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                min-width: 0;
+                flex: 1;
             }
 
-            .drop-copy {
+            .drop-icon {
+                width: 18px;
+                height: 18px;
+                color: var(--fuchsia);
+                flex-shrink: 0;
+            }
+
+            .drop-message {
                 color: var(--text-secondary);
                 font-size: 14px;
                 line-height: 1.6;
+                font-family: "Inter", system-ui, sans-serif;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
 
             .drop-badge {
                 flex-shrink: 0;
-                padding: 8px 12px;
+                padding: 4px 10px;
                 border-radius: 999px;
                 background: rgba(139, 92, 246, 0.10);
                 border: 1px solid rgba(139, 92, 246, 0.35);
-                font-size: 11px;
+                font-size: 10px;
                 letter-spacing: 0.24em;
                 text-transform: uppercase;
                 color: var(--text-primary);
+                font-family: "Space Mono", monospace;
             }
 
             .filename {
-                display: inline-block;
-                margin-top: 8px;
+                display: inline;
+                margin-left: 8px;
                 font-weight: 600;
                 color: var(--text-primary);
-                word-break: break-word;
+                font-family: "Inter", system-ui, sans-serif;
             }
 
             .actions {
-                display: flex;
-                justify-content: flex-end;
+                display: block;
                 margin-top: 18px;
+                width: 100%;
             }
 
             button {
-                padding: 14px 24px;
-                min-width: 180px;
+                width: 100%;
+                padding: 14px 18px;
                 border: 1px solid rgba(139, 92, 246, 0.30);
                 border-radius: 16px;
-                font: inherit;
+                font-family: "Space Mono", monospace;
                 font-weight: 600;
                 letter-spacing: 0.02em;
                 color: rgb(237, 233, 254);
@@ -741,28 +771,65 @@ def home():
                 justify-content: space-between;
                 gap: 16px;
                 align-items: center;
-                margin-bottom: 18px;
+                margin-bottom: 16px;
             }
 
             .output-title {
-                font-size: 24px;
+                font-size: 22px;
                 letter-spacing: -0.02em;
                 font-weight: 600;
                 color: var(--text-primary);
             }
 
             pre {
-                min-height: 220px;
+                min-height: calc(100vh - 200px);
                 white-space: pre-wrap;
                 word-wrap: break-word;
                 padding: 20px;
                 border-radius: 16px;
                 border: 1px solid var(--field-border);
-                background: var(--field-bg);
+                background: rgba(0, 0, 0, 0.35);
                 color: var(--text-secondary);
-                font-family: "Inter", system-ui, sans-serif;
+                font-family: "Space Mono", monospace;
                 font-size: 14px;
                 line-height: 1.7;
+                position: relative;
+                overflow: hidden;
+                flex: 1;
+            }
+
+            pre::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                background: repeating-linear-gradient(
+                    to bottom,
+                    transparent 0,
+                    transparent 2px,
+                    rgba(255, 255, 255, 1) 2px,
+                    rgba(255, 255, 255, 1) 4px
+                );
+                opacity: 0.03;
+                pointer-events: none;
+            }
+
+            pre::after {
+                content: "";
+                position: relative;
+                z-index: 1;
+                margin-left: 6px;
+            }
+
+            .output-panel:has(#response-state.idle) pre::after,
+            .output-panel:has(#response-state.ready) pre::after {
+                content: "█";
+                color: rgba(232, 121, 249, 0.8);
+                animation: blink 1s steps(1, end) infinite;
+            }
+
+            .output-panel {
+                display: flex;
+                flex-direction: column;
             }
 
             @keyframes card-enter {
@@ -776,12 +843,36 @@ def home():
                 }
             }
 
-            @media (max-width: 900px) {
-                .hero-header,
+            @keyframes rotate-border {
+                from { --angle: 0deg; }
+                to { --angle: 360deg; }
+            }
+
+            @keyframes blink {
+                0%, 50% { opacity: 1; }
+                51%, 100% { opacity: 0; }
+            }
+
+            @media (max-width: 899px) {
+                .top-bar {
+                    max-height: none;
+                }
+
+                .topbar-row,
                 .output-header,
-                .drop-top {
+                .drop-inline {
                     flex-direction: column;
                     align-items: flex-start;
+                }
+
+                .topbar-pills {
+                    width: 100%;
+                    justify-content: flex-start;
+                    flex-wrap: wrap;
+                }
+
+                pre {
+                    min-height: 320px;
                 }
             }
 
@@ -797,16 +888,8 @@ def home():
                     padding: 24px;
                 }
 
-                .actions {
-                    justify-content: stretch;
-                }
-
-                button {
-                    width: 100%;
-                }
-
-                h1 {
-                    max-width: none;
+                .top-bar {
+                    padding: 12px 16px;
                 }
             }
         </style>
@@ -818,52 +901,46 @@ def home():
             <div class="orb orb-mix"></div>
         </div>
         <div class="page-shell">
-            <section class="panel hero">
-                <div class="hero-layout">
-                    <div class="hero-header">
-                        <div class="icon-frame" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3z"></path>
-                                <path d="M9.5 12.5l1.7 1.7 3.3-4"></path>
-                            </svg>
-                        </div>
-                        <div>
-                            <div class="eyebrow">Secure Analysis Console</div>
-                            <h1>Dark Signal AI</h1>
-                        </div>
+            <section class="panel hero top-bar">
+                <div class="topbar-row">
+                    <div class="brand">
+                        <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3z"></path>
+                            <path d="M9.5 12.5l1.7 1.7 3.3-4"></path>
+                        </svg>
+                        <div class="app-title">Dark Signal AI</div>
                     </div>
-                    <p class="hero-copy">
-                        Drop in a file, write a prompt, and check out the answer inside a cleaner cyber-inspired workspace.
-                    </p>
-                    <div class="hero-meta">
-                        <span class="meta-pill">FastAPI + AI Workflow</span>
+                    <div class="topbar-pills">
                         <span id="file-status" class="meta-pill idle">No file attached</span>
+                        <span class="meta-pill">FastAPI + AI Workflow</span>
                     </div>
                 </div>
             </section>
 
-            <section class="panel composer">
-                <label class="section-label" for="prompt">Prompt Input</label>
-                <textarea id="prompt" rows="5" placeholder="Ask a question about a file, request a summary, or describe the analysis you want."></textarea>
+            <div class="content-grid">
+                <section class="panel composer">
+                    <label class="section-label" for="prompt">Prompt Input</label>
+                    <textarea id="prompt" rows="5" placeholder="Ask a question about a file, request a summary, or describe the analysis you want."></textarea>
 
-                <div id="drop-zone" class="drop-zone" onclick="document.getElementById('file-input').click()"></div>
-                <input type="file" id="file-input" hidden>
+                    <div id="drop-zone" class="drop-zone" onclick="document.getElementById('file-input').click()"></div>
+                    <input type="file" id="file-input" hidden>
 
-                <div class="actions">
-                    <button id="send-btn" onclick="sendPrompt()">Run Analysis</button>
-                </div>
-            </section>
-
-            <section class="panel output-panel">
-                <div class="output-header">
-                    <div>
-                        <div class="section-label">Response Feed</div>
-                        <div class="output-title">Model Output</div>
+                    <div class="actions">
+                        <button id="send-btn" onclick="sendPrompt()">Run Analysis</button>
                     </div>
-                    <div id="response-state" class="signal idle">Standing by</div>
-                </div>
-                <pre id="output">Your answer will appear here.</pre>
-            </section>
+                </section>
+
+                <section class="panel output-panel">
+                    <div class="output-header">
+                        <div>
+                            <div class="section-label">Response Feed</div>
+                            <div class="output-title">Model Output</div>
+                        </div>
+                        <div id="response-state" class="signal idle">Standing by</div>
+                    </div>
+                    <pre id="output">Your answer will appear here.</pre>
+                </section>
+            </div>
         </div>
 
         <script>
@@ -881,25 +958,32 @@ def home():
             function renderDropZone() {
                 if (uploadedFile) {
                     dropZone.innerHTML = `
-                        <div class="drop-top">
-                            <div class="drop-title">File locked and ready</div>
+                        <div class="drop-inline">
+                            <div class="drop-main">
+                                <svg class="drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M12 16V4"></path>
+                                    <path d="M8 8l4-4 4 4"></path>
+                                    <path d="M20 15v3a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3"></path>
+                                </svg>
+                                <div class="drop-message">File attached<span class="filename">${escapeHtml(uploadedFile.name)}</span></div>
+                            </div>
                             <div class="drop-badge">Attached</div>
-                        </div>
-                        <div class="drop-copy">
-                            Click to replace the current file or drag a new one into the zone.
-                            <div class="filename">${escapeHtml(uploadedFile.name)}</div>
                         </div>
                     `;
                     return;
                 }
 
                 dropZone.innerHTML = `
-                    <div class="drop-top">
-                        <div class="drop-title">Drop a file into the grid</div>
+                    <div class="drop-inline">
+                        <div class="drop-main">
+                            <svg class="drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M12 16V4"></path>
+                                <path d="M8 8l4-4 4 4"></path>
+                                <path d="M20 15v3a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3"></path>
+                            </svg>
+                            <div class="drop-message">Drop file or click to attach</div>
+                        </div>
                         <div class="drop-badge">Any format</div>
-                    </div>
-                    <div class="drop-copy">
-                        Drag and drop or click to attach a document, spreadsheet, PDF, or code file for analysis.
                     </div>
                 `;
             }
@@ -930,11 +1014,17 @@ def home():
             async function handleFile(file) {
                 dropZone.classList.add("busy");
                 dropZone.innerHTML = `
-                    <div class="drop-top">
-                        <div class="drop-title">Uploading file</div>
+                    <div class="drop-inline">
+                        <div class="drop-main">
+                            <svg class="drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M12 16V4"></path>
+                                <path d="M8 8l4-4 4 4"></path>
+                                <path d="M20 15v3a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3"></path>
+                            </svg>
+                            <div class="drop-message">Uploading<span class="filename">${escapeHtml(file.name)}</span></div>
+                        </div>
                         <div class="drop-badge">Syncing</div>
                     </div>
-                    <div class="drop-copy">Preparing ${escapeHtml(file.name)} for analysis...</div>
                 `;
                 setFileStatus("Uploading file", "busy");
                 const form = new FormData();
