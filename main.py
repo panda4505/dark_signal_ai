@@ -364,23 +364,24 @@ def home():
             }
 
             :root {
-                --page-bg: #05040A;
-                --panel-bg: rgba(255, 255, 255, 0.045);
-                --panel-border: rgba(255, 255, 255, 0.10);
-                --panel-hover-bg: rgba(139, 92, 246, 0.08);
-                --panel-hover-border: rgba(139, 92, 246, 0.25);
+                --page-bg: #0d0a14;
+                --panel-bg: #1a1625;
+                --panel-border: rgba(255, 255, 255, 0.08);
+                --panel-hover-bg: #201b2d;
+                --panel-hover-border: rgba(0, 243, 255, 0.20);
                 --violet: rgb(139, 92, 246);
-                --violet-border: rgba(139, 92, 246, 0.30);
-                --violet-soft: rgba(139, 92, 246, 0.12);
+                --violet-border: rgba(139, 92, 246, 0.22);
+                --violet-soft: rgba(139, 92, 246, 0.08);
                 --violet-focus: rgba(139, 92, 246, 0.40);
                 --fuchsia: rgb(232, 121, 249);
+                --cyan: #00f3ff;
                 --emerald: rgb(16, 185, 129);
                 --text-primary: #ffffff;
-                --text-secondary: rgb(148, 163, 184);
-                --text-muted: rgba(148, 163, 184, 0.72);
+                --text-secondary: rgba(196, 187, 220, 0.82);
+                --text-muted: rgba(161, 151, 188, 0.65);
                 --placeholder: rgb(100, 116, 139);
-                --field-bg: rgba(0, 0, 0, 0.20);
-                --field-border: rgba(255, 255, 255, 0.10);
+                --field-bg: rgba(8, 8, 15, 0.38);
+                --field-border: rgba(255, 255, 255, 0.08);
                 --shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
             }
 
@@ -398,7 +399,7 @@ def home():
                 content: "";
                 position: fixed;
                 inset: 0;
-                background: radial-gradient(circle at top center, rgba(139, 92, 246, 0.16), transparent 58%);
+                background: radial-gradient(circle at top center, rgba(139, 92, 246, 0.14), transparent 58%);
                 pointer-events: none;
                 z-index: 0;
             }
@@ -424,7 +425,7 @@ def home():
                 position: absolute;
                 border-radius: 999px;
                 filter: blur(48px);
-                opacity: 0.18;
+                opacity: 0.12;
             }
 
             .orb-violet {
@@ -455,10 +456,10 @@ def home():
                 position: relative;
                 background: var(--panel-bg);
                 border: 1px solid var(--panel-border);
-                border-radius: 28px;
+                border-radius: 12px;
                 box-shadow: var(--shadow);
-                backdrop-filter: blur(24px);
-                -webkit-backdrop-filter: blur(24px);
+                backdrop-filter: blur(18px);
+                -webkit-backdrop-filter: blur(18px);
                 transition: background 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
                 animation: card-enter 0.45s ease both;
                 overflow: hidden;
@@ -476,7 +477,7 @@ def home():
                 inset: -1px;
                 border-radius: inherit;
                 padding: 1px;
-                background: rgba(139, 92, 246, 0.30);
+                background: rgba(139, 92, 246, 0.22);
                 -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
                 -webkit-mask-composite: xor;
                 mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
@@ -494,7 +495,7 @@ def home():
             .output-panel:has(#response-state.busy)::before,
             .output-panel:has(#response-state.ready)::before {
                 opacity: 1;
-                background: conic-gradient(from var(--angle), rgba(139, 92, 246, 0.95), rgba(232, 121, 249, 0.92), rgba(139, 92, 246, 0.95));
+                background: conic-gradient(from var(--angle), rgba(0, 243, 255, 0.92), rgba(232, 121, 249, 0.82), rgba(0, 243, 255, 0.92));
                 animation: rotate-border 6s linear infinite;
             }
 
@@ -538,12 +539,11 @@ def home():
                 display: flex;
                 align-items: center;
                 justify-content: flex-end;
-                gap: 10px;
+                gap: 8px;
                 min-width: 0;
                 flex: 1;
             }
 
-            .hero,
             .composer,
             .output-panel {
                 padding: 24px;
@@ -564,7 +564,7 @@ def home():
             .meta-pill, .signal {
                 display: flex;
                 align-items: center;
-                gap: 12px;
+                gap: 8px;
                 border-radius: 999px;
                 padding: 4px 10px;
                 font-family: "Space Mono", monospace;
@@ -572,11 +572,12 @@ def home():
                 letter-spacing: 0.24em;
                 text-transform: uppercase;
                 color: var(--text-primary);
-                background: rgba(139, 92, 246, 0.10);
-                border: 1px solid rgba(139, 92, 246, 0.35);
+                background: rgba(255, 255, 255, 0.03);
+                border: 1px solid rgba(255, 255, 255, 0.08);
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
+                min-width: 0;
             }
 
             .meta-pill::before, .signal::before {
@@ -584,53 +585,54 @@ def home():
                 width: 6px;
                 height: 6px;
                 border-radius: 50%;
-                background: var(--violet);
-                box-shadow: 0 0 16px rgba(139, 92, 246, 0.45);
+                background: var(--cyan);
+                box-shadow: 0 0 14px rgba(0, 243, 255, 0.55);
                 flex-shrink: 0;
             }
 
             .meta-pill.idle::before, .signal.idle::before {
-                background: var(--violet);
-                box-shadow: 0 0 16px rgba(139, 92, 246, 0.35);
+                background: var(--cyan);
+                box-shadow: 0 0 14px rgba(0, 243, 255, 0.55);
             }
 
             .meta-pill.busy::before, .signal.busy::before {
-                background: var(--fuchsia);
-                box-shadow: 0 0 16px rgba(232, 121, 249, 0.45);
+                background: var(--cyan);
+                box-shadow: 0 0 14px rgba(0, 243, 255, 0.55);
             }
 
             .meta-pill.ready,
             .signal.ready {
-                background: rgba(16, 185, 129, 0.10);
-                border-color: rgba(16, 185, 129, 0.35);
+                background: rgba(0, 243, 255, 0.06);
+                border-color: rgba(0, 243, 255, 0.18);
             }
 
             .meta-pill.ready::before,
             .signal.ready::before {
-                background: var(--emerald);
-                box-shadow: 0 0 16px rgba(16, 185, 129, 0.45);
+                background: var(--cyan);
+                box-shadow: 0 0 14px rgba(0, 243, 255, 0.55);
             }
 
             .section-label {
                 display: block;
-                margin-bottom: 12px;
-                color: var(--text-secondary);
-                font-size: 12px;
-                letter-spacing: 0.22em;
+                margin-bottom: 16px;
+                color: var(--text-muted);
+                font-size: 0.85rem;
+                letter-spacing: 1.5px;
                 text-transform: uppercase;
                 font-family: "Space Mono", monospace;
+                opacity: 0.65;
             }
 
             textarea {
                 width: 100%;
                 min-height: 120px;
-                padding: 16px 18px;
+                padding: 16px;
                 font-family: "Inter", system-ui, sans-serif;
                 font-size: 15px;
                 line-height: 1.6;
                 color: var(--text-primary);
                 resize: vertical;
-                border-radius: 16px;
+                border-radius: 12px;
                 border: 1px solid var(--field-border);
                 border-left: 2px solid rgba(139, 92, 246, 0.40);
                 background: var(--field-bg);
@@ -639,9 +641,9 @@ def home():
             }
 
             textarea:focus {
-                border-color: var(--violet-focus);
-                background: rgba(139, 92, 246, 0.06);
-                box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.12), 0 0 24px rgba(139, 92, 246, 0.14);
+                border-color: rgba(0, 243, 255, 0.28);
+                background: rgba(11, 16, 21, 0.9);
+                box-shadow: 0 0 0 1px rgba(0, 243, 255, 0.10), 0 0 20px rgba(0, 243, 255, 0.10);
             }
 
             textarea::placeholder {
@@ -650,7 +652,7 @@ def home():
 
             .drop-zone {
                 margin-top: 16px;
-                border-radius: 16px;
+                border-radius: 12px;
                 border: 1px solid var(--field-border);
                 background: var(--field-bg);
                 padding: 12px 16px;
@@ -660,14 +662,14 @@ def home():
 
             .drop-zone:hover,
             .drop-zone.drag-over {
-                border-color: var(--violet-focus);
-                background: rgba(139, 92, 246, 0.06);
-                box-shadow: 0 0 28px rgba(139, 92, 246, 0.12);
+                border-color: rgba(0, 243, 255, 0.28);
+                background: rgba(9, 18, 23, 0.92);
+                box-shadow: 0 0 24px rgba(0, 243, 255, 0.08);
             }
 
             .drop-zone.busy {
-                border-color: rgba(232, 121, 249, 0.35);
-                background: rgba(139, 92, 246, 0.08);
+                border-color: rgba(0, 243, 255, 0.22);
+                background: rgba(14, 21, 28, 0.96);
             }
 
             .drop-inline {
@@ -726,29 +728,31 @@ def home():
 
             .actions {
                 display: block;
-                margin-top: 18px;
+                margin-top: auto;
+                padding-top: 24px;
                 width: 100%;
             }
 
             button {
                 width: 100%;
-                padding: 14px 18px;
-                border: 1px solid rgba(139, 92, 246, 0.30);
-                border-radius: 16px;
+                padding: 14px 16px;
+                border: 1px solid rgba(0, 243, 255, 0.22);
+                border-radius: 12px;
                 font-family: "Space Mono", monospace;
                 font-weight: 600;
                 letter-spacing: 0.02em;
-                color: rgb(237, 233, 254);
+                color: rgba(224, 251, 255, 0.98);
                 cursor: pointer;
-                background: rgba(139, 92, 246, 0.15);
-                box-shadow: 0 0 24px rgba(139, 92, 246, 0.25);
+                background: #2a243b;
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 24px rgba(0, 243, 255, 0.05), 0 12px 24px rgba(0, 0, 0, 0.25);
                 transition: background 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, transform 0.18s ease, opacity 0.18s ease;
             }
 
             button:hover:not(:disabled) {
-                background: rgba(139, 92, 246, 0.20);
-                border-color: rgba(139, 92, 246, 0.40);
-                box-shadow: 0 0 36px rgba(139, 92, 246, 0.30);
+                background: #312944;
+                border-color: rgba(0, 243, 255, 0.42);
+                color: #ffffff;
+                box-shadow: inset 0 0 24px rgba(0, 243, 255, 0.08), 0 0 28px rgba(0, 243, 255, 0.12);
                 transform: translateY(-1px);
             }
 
@@ -775,7 +779,7 @@ def home():
                 display: flex;
                 justify-content: space-between;
                 gap: 16px;
-                align-items: center;
+                align-items: baseline;
                 margin-bottom: 16px;
             }
 
@@ -791,7 +795,7 @@ def home():
                 white-space: pre-wrap;
                 word-wrap: break-word;
                 padding: 20px;
-                border-radius: 16px;
+                border-radius: 12px;
                 border: 1px solid var(--field-border);
                 background: rgba(0, 0, 0, 0.35);
                 color: var(--text-secondary);
@@ -801,6 +805,7 @@ def home():
                 position: relative;
                 overflow: hidden;
                 flex: 1;
+                text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.9);
             }
 
             pre::before {
@@ -828,7 +833,7 @@ def home():
             .output-panel:has(#response-state.idle) pre::after,
             .output-panel:has(#response-state.ready) pre::after {
                 content: "█";
-                color: rgba(232, 121, 249, 0.8);
+                color: var(--cyan);
                 animation: blink 1s steps(1, end) infinite;
             }
 
@@ -887,7 +892,6 @@ def home():
                     padding: 24px 0;
                 }
 
-                .hero,
                 .composer,
                 .output-panel {
                     padding: 24px;
