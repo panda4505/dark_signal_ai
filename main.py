@@ -603,6 +603,8 @@ def home():
         <title>Dark Signal AI</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
+            @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap");
+
             :root {
                 color-scheme: dark;
                 --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -686,7 +688,7 @@ def home():
 
             .app-title {
                 color: var(--text-primary);
-                font-family: var(--font-mono);
+                font-family: "Outfit", sans-serif;
                 font-size: 14px;
                 font-weight: 700;
                 letter-spacing: 0.16em;
