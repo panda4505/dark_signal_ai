@@ -325,8 +325,13 @@ def ask_ai(data: PromptRequest):
         response = client.chat.completions.create(
             model=model_name,
             messages=messages,
+            max_tokens=16384,
         )
-        return {"answer": response.choices[0].message.content}
+        reasoning = getattr(response.choices[0].message, "reasoning_content", None) or ""
+        content = response.choices[0].message.content or ""
+        if reasoning:
+            return {"answer": content, "reasoning": reasoning}
+        return {"answer": content}
     except Exception as e:
         if file_kind == "image":
             return {
@@ -1067,7 +1072,11 @@ def home():
                     body: JSON.stringify(body)
                 });
                 const data = await res.json();
-                output.textContent = data.answer || data.error;
+                if (data.reasoning) {
+                    output.textContent = "💭 Thinking:\n" + data.reasoning + "\n\n---\n\n" + (data.answer || data.error);
+                } else {
+                    output.textContent = data.answer || data.error;
+                }
                 setResponseState("Response ready", "ready");
 
                 btn.disabled = false;
