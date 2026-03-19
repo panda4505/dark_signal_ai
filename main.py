@@ -24,13 +24,17 @@ logger = logging.getLogger(__name__)
 app = FastAPI()
 
 TEXT_MODEL = os.getenv("DEEPSEEK_MODEL", "deepseek-reasoner")
-VISION_MODEL = os.getenv("DEEPSEEK_VISION_MODEL", TEXT_MODEL)
+VISION_MODEL = os.getenv("DEEPSEEK_VISION_MODEL", "gpt-4o")
 API_TIMEOUT_SECONDS = 900
 
 client = OpenAI(
     api_key=os.getenv("DEEPSEEK_API_KEY"),
     base_url="https://api.deepseek.com",
     timeout=API_TIMEOUT_SECONDS,
+)
+openai_client = OpenAI(
+    api_key=os.getenv("OPENAI_API_KEY"),
+    base_url="https://api.openai.com/v1"
 )
 
 # Temp directory for uploaded files
@@ -561,11 +565,18 @@ def ask_ai(data: PromptRequest):
     file_kind = "none"
     try:
         file_kind, model_name, messages = build_request_payload(data)
-        response = client.chat.completions.create(
-            model=model_name,
-            messages=messages,
-            max_tokens=16384,
-        )
+        if file_kind == "image":
+            response = openai_client.chat.completions.create(
+                model=model_name,
+                messages=messages,
+                max_tokens=4096,
+            )
+        else:
+            response = client.chat.completions.create(
+                model=model_name,
+                messages=messages,
+                max_tokens=16384,
+            )
         reasoning = getattr(response.choices[0].message, "reasoning_content", None) or ""
         content = response.choices[0].message.content or ""
         if reasoning:
