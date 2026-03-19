@@ -462,7 +462,7 @@ def home():
                 -webkit-backdrop-filter: blur(18px);
                 transition: background 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
                 animation: card-enter 0.45s ease both;
-                overflow: hidden;
+                overflow: visible;
                 isolation: isolate;
             }
 
@@ -751,6 +751,21 @@ def home():
                 transition: background 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, transform 0.18s ease, opacity 0.18s ease;
             }
 
+            #send-btn {
+                position: relative;
+                z-index: 10;
+            }
+
+            #drop-zone {
+                position: relative;
+                z-index: 10;
+            }
+
+            #prompt {
+                position: relative;
+                z-index: 10;
+            }
+
             button:hover:not(:disabled) {
                 background: #312944;
                 border-color: rgba(0, 243, 255, 0.42);
@@ -1030,7 +1045,7 @@ def home():
                     <input type="file" id="file-input" hidden>
 
                     <div class="actions">
-                        <button type="button" id="send-btn" onclick="sendPrompt()">Run Analysis</button>
+                        <button type="button" id="send-btn">Run Analysis</button>
                     </div>
                 </section>
 
@@ -1118,6 +1133,7 @@ def home():
             });
 
             output.addEventListener("animationend", () => output.classList.remove("output-ready"));
+            sendButton.addEventListener("click", sendPrompt);
 
             async function handleFile(file) {
                 dropZone.classList.add("busy");
