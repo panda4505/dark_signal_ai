@@ -463,7 +463,6 @@ def home():
                 transition: background 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
                 animation: card-enter 0.45s ease both;
                 overflow: visible;
-                isolation: isolate;
             }
 
             .panel:hover {
@@ -471,33 +470,9 @@ def home():
                 border-color: var(--panel-hover-border);
             }
 
-            .panel::before {
-                content: "";
-                position: absolute;
-                inset: -1px;
-                border-radius: inherit;
-                padding: 1px;
-                background: rgba(139, 92, 246, 0.22);
-                -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-                -webkit-mask-composite: xor;
-                mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-                mask-composite: exclude;
-                opacity: 0;
-                pointer-events: none;
-                transition: opacity 0.2s ease;
-            }
-
             .hero { animation-delay: 0s; }
             .composer { animation-delay: 0.08s; }
             .output-panel { animation-delay: 0.16s; }
-
-            .composer:focus-within::before,
-            .output-panel:has(#response-state.busy)::before,
-            .output-panel:has(#response-state.ready)::before {
-                opacity: 1;
-                background: conic-gradient(from var(--angle), rgba(0, 243, 255, 0.92), rgba(232, 121, 249, 0.82), rgba(0, 243, 255, 0.92));
-                animation: rotate-border 6s linear infinite;
-            }
 
             .top-bar {
                 padding: 12px 24px;
