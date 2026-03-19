@@ -854,12 +854,59 @@ def home():
                 flex-direction: column;
             }
 
+            .robot-loader {
+                position: relative;
+                z-index: 1;
+                width: 100%;
+                min-height: 100%;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 16px;
+                text-align: center;
+                white-space: normal;
+                color: var(--text-secondary);
+            }
+
+            .loader-ring {
+                width: 44px;
+                height: 44px;
+                border-radius: 999px;
+                border: 3px solid rgba(0, 243, 255, 0.14);
+                border-top-color: var(--cyan);
+                border-right-color: rgba(232, 121, 249, 0.82);
+                box-shadow: 0 0 24px rgba(0, 243, 255, 0.12);
+                animation: robot-spin 0.95s linear infinite;
+                flex-shrink: 0;
+            }
+
+            .loader-text {
+                font-family: "Space Mono", monospace;
+                font-size: 13px;
+                letter-spacing: 0.04em;
+                color: var(--cyan);
+                text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.9);
+            }
+
+            pre.output-loading {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                white-space: normal;
+            }
+
             .typing-dots::after {
                 content: "";
                 animation: dots 1.2s steps(1) infinite;
             }
 
             pre.typing-dots::after {
+                content: none;
+                animation: none;
+            }
+
+            pre.output-loading::after {
                 content: none;
                 animation: none;
             }
@@ -904,6 +951,11 @@ def home():
             @keyframes fade-in-text {
                 from { opacity: 0; transform: translateY(6px); }
                 to { opacity: 1; transform: translateY(0); }
+            }
+
+            @keyframes robot-spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
             }
 
             @media (max-width: 899px) {
@@ -978,7 +1030,7 @@ def home():
                     <input type="file" id="file-input" hidden>
 
                     <div class="actions">
-                        <button id="send-btn" onclick="sendPrompt()">Run Analysis</button>
+                        <button id="send-btn" onclick="sendPrompt()" disabled>Run Analysis</button>
                     </div>
                 </section>
 
@@ -1002,6 +1054,8 @@ def home():
             const fileStatus = document.getElementById("file-status");
             const responseState = document.getElementById("response-state");
             const output = document.getElementById("output");
+            const promptInput = document.getElementById("prompt");
+            const sendButton = document.getElementById("send-btn");
 
             function escapeHtml(text) {
                 return text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
@@ -1050,7 +1104,13 @@ def home():
                 responseState.className = "signal " + stateClass;
             }
 
+            function syncSendButtonState() {
+                if (sendButton.classList.contains("button-processing")) return;
+                sendButton.disabled = !promptInput.value.trim();
+            }
+
             renderDropZone();
+            syncSendButtonState();
 
             dropZone.addEventListener("dragover", e => { e.preventDefault(); dropZone.classList.add("drag-over"); });
             dropZone.addEventListener("dragleave", () => dropZone.classList.remove("drag-over"));
@@ -1062,6 +1122,7 @@ def home():
             document.getElementById("file-input").addEventListener("change", e => {
                 if (e.target.files.length) handleFile(e.target.files[0]);
             });
+            promptInput.addEventListener("input", syncSendButtonState);
 
             output.addEventListener("animationend", () => output.classList.remove("output-ready"));
 
@@ -1100,43 +1161,54 @@ def home():
             }
 
             async function sendPrompt() {
-                const btn = document.getElementById("send-btn");
-                const prompt = document.getElementById("prompt").value;
-                if (!prompt.trim()) return;
+                const btn = sendButton;
+                const prompt = promptInput.value;
+                if (!prompt.trim()) {
+                    syncSendButtonState();
+                    return;
+                }
 
                 btn.disabled = true;
                 btn.classList.add("button-processing");
                 btn.innerHTML = '<span class="typing-dots">Analyzing</span>';
                 output.classList.remove("output-ready");
-                output.classList.add("typing-dots");
+                output.classList.remove("typing-dots");
+                output.classList.add("output-loading");
                 output.textContent = "";
-                output.innerHTML = '<span class="typing-dots">Processing your request</span>';
+                output.innerHTML = '<span class="robot-loader"><span class="loader-ring" aria-hidden="true"></span><span class="loader-text">The Robot is thinking...</span></span>';
                 setResponseState("Analyzing", "busy");
 
-                const body = { prompt };
-                if (uploadedFile) {
-                    body.file_path = uploadedFile.path;
-                    body.file_name = uploadedFile.name;
-                }
+                try {
+                    const body = { prompt };
+                    if (uploadedFile) {
+                        body.file_path = uploadedFile.path;
+                        body.file_name = uploadedFile.name;
+                    }
 
-                const res = await fetch("/ask", {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify(body)
-                });
-                const data = await res.json();
-                if (data.reasoning) {
-                    output.textContent = "💭 Thinking:\n" + data.reasoning + "\n\n---\n\n" + (data.answer || data.error);
-                } else {
-                    output.textContent = data.answer || data.error;
+                    const res = await fetch("/ask", {
+                        method: "POST",
+                        headers: {"Content-Type": "application/json"},
+                        body: JSON.stringify(body)
+                    });
+                    const data = await res.json();
+                    if (data.reasoning) {
+                        output.textContent = "💭 Thinking:\n" + data.reasoning + "\n\n---\n\n" + (data.answer || data.error);
+                    } else {
+                        output.textContent = data.answer || data.error;
+                    }
+                    setResponseState("Response ready", "ready");
+                } catch (error) {
+                    output.textContent = "Request failed. Please try again.";
+                    setResponseState("Request failed", "idle");
+                } finally {
+                    output.classList.remove("typing-dots");
+                    output.classList.remove("output-loading");
+                    btn.classList.remove("button-processing");
+                    output.classList.add("output-ready");
+                    btn.textContent = "Run Analysis";
+                    btn.disabled = false;
+                    syncSendButtonState();
                 }
-                output.classList.remove("typing-dots");
-                btn.classList.remove("button-processing");
-                output.classList.add("output-ready");
-                setResponseState("Response ready", "ready");
-
-                btn.textContent = "Run Analysis";
-                btn.disabled = false;
             }
         </script>
     </body>
