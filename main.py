@@ -1030,7 +1030,7 @@ def home():
                     <input type="file" id="file-input" hidden>
 
                     <div class="actions">
-                        <button id="send-btn" onclick="sendPrompt()">Run Analysis</button>
+                        <button type="button" id="send-btn" onclick="sendPrompt()">Run Analysis</button>
                     </div>
                 </section>
 
@@ -1156,7 +1156,10 @@ def home():
             async function sendPrompt() {
                 const btn = sendButton;
                 const prompt = promptInput.value;
+                console.log("sendPrompt fired", promptInput.value);
                 if (!prompt.trim()) {
+                    output.textContent = "Please enter a prompt first.";
+                    setResponseState("No prompt entered", "idle");
                     return;
                 }
 
