@@ -15,7 +15,7 @@ load_dotenv()
 
 app = FastAPI()
 
-TEXT_MODEL = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
+TEXT_MODEL = os.getenv("DEEPSEEK_MODEL", "deepseek-reasoner")
 VISION_MODEL = os.getenv("DEEPSEEK_VISION_MODEL", TEXT_MODEL)
 
 client = OpenAI(
