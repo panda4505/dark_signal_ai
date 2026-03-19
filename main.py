@@ -646,7 +646,7 @@ def home():
             }
 
             .page-shell {
-                width: min(1180px, calc(100% - 32px));
+                width: min(1600px, calc(100% - 40px));
                 margin: 0 auto;
                 padding: 28px 0 36px;
                 display: grid;
@@ -689,9 +689,9 @@ def home():
             .app-title {
                 color: var(--text-primary);
                 font-family: "Outfit", sans-serif;
-                font-size: 20px;
+                font-size: 26px;
                 font-weight: 700;
-                letter-spacing: 0.16em;
+                letter-spacing: 0.06em;
                 text-transform: uppercase;
                 white-space: nowrap;
             }
