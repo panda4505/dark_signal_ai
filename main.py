@@ -1030,7 +1030,7 @@ def home():
                     <input type="file" id="file-input" hidden>
 
                     <div class="actions">
-                        <button id="send-btn" onclick="sendPrompt()" disabled>Run Analysis</button>
+                        <button id="send-btn" onclick="sendPrompt()">Run Analysis</button>
                     </div>
                 </section>
 
@@ -1104,13 +1104,7 @@ def home():
                 responseState.className = "signal " + stateClass;
             }
 
-            function syncSendButtonState() {
-                if (sendButton.classList.contains("button-processing")) return;
-                sendButton.disabled = !promptInput.value.trim();
-            }
-
             renderDropZone();
-            syncSendButtonState();
 
             dropZone.addEventListener("dragover", e => { e.preventDefault(); dropZone.classList.add("drag-over"); });
             dropZone.addEventListener("dragleave", () => dropZone.classList.remove("drag-over"));
@@ -1122,7 +1116,6 @@ def home():
             document.getElementById("file-input").addEventListener("change", e => {
                 if (e.target.files.length) handleFile(e.target.files[0]);
             });
-            promptInput.addEventListener("input", syncSendButtonState);
 
             output.addEventListener("animationend", () => output.classList.remove("output-ready"));
 
@@ -1164,7 +1157,6 @@ def home():
                 const btn = sendButton;
                 const prompt = promptInput.value;
                 if (!prompt.trim()) {
-                    syncSendButtonState();
                     return;
                 }
 
@@ -1207,7 +1199,6 @@ def home():
                     output.classList.add("output-ready");
                     btn.textContent = "Run Analysis";
                     btn.disabled = false;
-                    syncSendButtonState();
                 }
             }
         </script>
