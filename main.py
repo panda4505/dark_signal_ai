@@ -605,18 +605,12 @@ def home():
         <style>
             @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap");
 
-            @property --angle {
-                syntax: "<angle>";
-                inherits: false;
-                initial-value: 0deg;
-            }
-
             :root {
                 --page-bg: #0d0a14;
-                --panel-bg: #1a1625;
+                --panel-bg: #17141f;
                 --panel-border: rgba(255, 255, 255, 0.08);
-                --panel-hover-bg: #201b2d;
-                --panel-hover-border: rgba(0, 243, 255, 0.20);
+                --panel-hover-bg: #1c1827;
+                --panel-hover-border: rgba(0, 243, 255, 0.16);
                 --violet: rgb(139, 92, 246);
                 --violet-border: rgba(139, 92, 246, 0.22);
                 --violet-soft: rgba(139, 92, 246, 0.08);
@@ -628,9 +622,9 @@ def home():
                 --text-secondary: rgba(196, 187, 220, 0.82);
                 --text-muted: rgba(161, 151, 188, 0.65);
                 --placeholder: rgb(100, 116, 139);
-                --field-bg: rgba(8, 8, 15, 0.38);
+                --field-bg: #100e16;
                 --field-border: rgba(255, 255, 255, 0.08);
-                --shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+                --shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
             }
 
             * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -639,17 +633,8 @@ def home():
                 min-height: 100vh;
                 font-family: "Inter", system-ui, sans-serif;
                 color: var(--text-primary);
-                background: var(--page-bg);
+                background: linear-gradient(180deg, #12101a 0%, var(--page-bg) 100%);
                 overflow-x: hidden;
-            }
-
-            body::before {
-                content: "";
-                position: fixed;
-                inset: 0;
-                background: radial-gradient(circle at top center, rgba(139, 92, 246, 0.14), transparent 58%);
-                pointer-events: none;
-                z-index: 0;
             }
 
             .page-shell {
@@ -662,54 +647,13 @@ def home():
                 gap: 24px;
             }
 
-            .background-orbs {
-                position: fixed;
-                inset: 0;
-                pointer-events: none;
-                z-index: 0;
-            }
-
-            .orb {
-                position: absolute;
-                border-radius: 999px;
-                filter: blur(48px);
-                opacity: 0.12;
-            }
-
-            .orb-violet {
-                width: 420px;
-                height: 420px;
-                top: -120px;
-                left: -100px;
-                background: rgba(139, 92, 246, 0.95);
-            }
-
-            .orb-fuchsia {
-                width: 360px;
-                height: 360px;
-                top: 140px;
-                right: 80px;
-                background: rgba(232, 121, 249, 0.95);
-            }
-
-            .orb-mix {
-                width: 460px;
-                height: 460px;
-                right: 18%;
-                bottom: -140px;
-                background: linear-gradient(135deg, rgba(139, 92, 246, 0.95), rgba(232, 121, 249, 0.9));
-            }
-
             .panel {
                 position: relative;
                 background: var(--panel-bg);
                 border: 1px solid var(--panel-border);
                 border-radius: 12px;
                 box-shadow: var(--shadow);
-                backdrop-filter: blur(18px);
-                -webkit-backdrop-filter: blur(18px);
-                transition: background 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
-                animation: card-enter 0.45s ease both;
+                transition: background 0.2s ease, border-color 0.2s ease;
                 overflow: visible;
             }
 
@@ -717,10 +661,6 @@ def home():
                 background: var(--panel-hover-bg);
                 border-color: var(--panel-hover-border);
             }
-
-            .hero { animation-delay: 0s; }
-            .composer { animation-delay: 0.08s; }
-            .output-panel { animation-delay: 0.16s; }
 
             .top-bar {
                 padding: 12px 24px;
@@ -812,18 +752,15 @@ def home():
                 height: 6px;
                 border-radius: 50%;
                 background: var(--cyan);
-                box-shadow: 0 0 14px rgba(0, 243, 255, 0.55);
                 flex-shrink: 0;
             }
 
             .meta-pill.idle::before, .signal.idle::before {
                 background: var(--cyan);
-                box-shadow: 0 0 14px rgba(0, 243, 255, 0.55);
             }
 
             .meta-pill.busy::before, .signal.busy::before {
                 background: var(--cyan);
-                box-shadow: 0 0 14px rgba(0, 243, 255, 0.55);
             }
 
             .meta-pill.ready,
@@ -835,7 +772,6 @@ def home():
             .meta-pill.ready::before,
             .signal.ready::before {
                 background: var(--cyan);
-                box-shadow: 0 0 14px rgba(0, 243, 255, 0.55);
             }
 
             .section-label {
@@ -863,13 +799,12 @@ def home():
                 border-left: 2px solid rgba(139, 92, 246, 0.40);
                 background: var(--field-bg);
                 outline: none;
-                transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+                transition: border-color 0.2s ease, background 0.2s ease;
             }
 
             textarea:focus {
                 border-color: rgba(0, 243, 255, 0.28);
-                background: rgba(11, 16, 21, 0.9);
-                box-shadow: 0 0 0 1px rgba(0, 243, 255, 0.10), 0 0 20px rgba(0, 243, 255, 0.10);
+                background: #14111c;
             }
 
             textarea::placeholder {
@@ -883,19 +818,18 @@ def home():
                 background: rgba(139, 92, 246, 0.06);
                 padding: 12px 16px;
                 cursor: pointer;
-                transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+                transition: border-color 0.2s ease, background 0.2s ease;
             }
 
             .drop-zone:hover,
             .drop-zone.drag-over {
                 border-color: rgba(0, 243, 255, 0.28);
-                background: rgba(9, 18, 23, 0.92);
-                box-shadow: 0 0 24px rgba(0, 243, 255, 0.08);
+                background: #131820;
             }
 
             .drop-zone.busy {
                 border-color: rgba(0, 243, 255, 0.22);
-                background: rgba(14, 21, 28, 0.96);
+                background: #151c24;
             }
 
             .drop-inline {
@@ -970,8 +904,8 @@ def home():
                 color: rgba(224, 251, 255, 0.98);
                 cursor: pointer;
                 background: #2a243b;
-                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 24px rgba(0, 243, 255, 0.05), 0 12px 24px rgba(0, 0, 0, 0.25);
-                transition: background 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, transform 0.18s ease, opacity 0.18s ease;
+                box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
+                transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease, opacity 0.18s ease;
             }
 
             #send-btn {
@@ -993,13 +927,11 @@ def home():
                 background: #312944;
                 border-color: rgba(0, 243, 255, 0.42);
                 color: #ffffff;
-                box-shadow: inset 0 0 24px rgba(0, 243, 255, 0.08), 0 0 28px rgba(0, 243, 255, 0.12);
                 transform: translateY(-1px);
             }
 
             .button-processing {
-                animation: pulse-glow 1.8s ease-in-out infinite;
-                background: rgba(0, 243, 255, 0.08);
+                background: rgba(0, 243, 255, 0.10);
                 border-color: rgba(0, 243, 255, 0.30);
                 color: var(--cyan);
                 cursor: wait;
@@ -1016,7 +948,6 @@ def home():
             .secondary-button:hover:not(:disabled) {
                 background: rgba(255, 255, 255, 0.06);
                 border-color: rgba(139, 92, 246, 0.30);
-                box-shadow: 0 0 24px rgba(139, 92, 246, 0.12);
             }
 
             button:disabled {
@@ -1072,9 +1003,7 @@ def home():
                 padding: 16px;
                 border-radius: 12px;
                 border: 1px solid rgba(255, 255, 255, 0.08);
-                background: rgba(9, 12, 18, 0.72);
-                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
-                animation: fade-in-text 0.25s ease both;
+                background: #10131b;
             }
 
             .reasoning-label {
@@ -1093,7 +1022,6 @@ def home():
                 font-family: "Space Mono", monospace;
                 font-size: 13px;
                 line-height: 1.7;
-                text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.9);
             }
 
             pre {
@@ -1103,44 +1031,12 @@ def home():
                 padding: 20px;
                 border-radius: 12px;
                 border: 1px solid var(--field-border);
-                background: rgba(0, 0, 0, 0.35);
+                background: #0f0d15;
                 color: var(--text-secondary);
                 font-family: "Space Mono", monospace;
                 font-size: 14px;
                 line-height: 1.7;
-                position: relative;
-                overflow: hidden;
                 flex: 1;
-                text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.9);
-            }
-
-            pre::before {
-                content: "";
-                position: absolute;
-                inset: 0;
-                background: repeating-linear-gradient(
-                    to bottom,
-                    transparent 0,
-                    transparent 2px,
-                    rgba(255, 255, 255, 1) 2px,
-                    rgba(255, 255, 255, 1) 4px
-                );
-                opacity: 0.03;
-                pointer-events: none;
-            }
-
-            pre::after {
-                content: "";
-                position: relative;
-                z-index: 1;
-                margin-left: 6px;
-            }
-
-            .output-panel:has(#response-state.idle) pre::after,
-            .output-panel:has(#response-state.ready) pre::after {
-                content: "█";
-                color: var(--cyan);
-                animation: blink 1s steps(1, end) infinite;
             }
 
             .output-panel {
@@ -1170,7 +1066,6 @@ def home():
                 border: 3px solid rgba(0, 243, 255, 0.14);
                 border-top-color: var(--cyan);
                 border-right-color: rgba(232, 121, 249, 0.82);
-                box-shadow: 0 0 24px rgba(0, 243, 255, 0.12);
                 animation: robot-spin 0.95s linear infinite;
                 flex-shrink: 0;
             }
@@ -1180,7 +1075,6 @@ def home():
                 font-size: 13px;
                 letter-spacing: 0.04em;
                 color: var(--cyan);
-                text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.9);
             }
 
             pre.output-loading {
@@ -1190,66 +1084,18 @@ def home():
                 white-space: normal;
             }
 
-            .typing-dots::after {
-                content: "";
-                animation: dots 1.2s steps(1) infinite;
-            }
-
-            pre.typing-dots::after {
-                content: none;
-                animation: none;
-            }
-
-            pre.output-loading::after {
-                content: none;
-                animation: none;
-            }
-
-            .output-ready {
-                animation: fade-in-text 0.4s ease both;
-            }
-
-            @keyframes card-enter {
-                from {
-                    opacity: 0;
-                    transform: translateY(16px);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-            }
-
-            @keyframes rotate-border {
-                from { --angle: 0deg; }
-                to { --angle: 360deg; }
-            }
-
-            @keyframes blink {
-                0%, 50% { opacity: 1; }
-                51%, 100% { opacity: 0; }
-            }
-
-            @keyframes pulse-glow {
-                0%, 100% { box-shadow: inset 0 0 24px rgba(0, 243, 255, 0.05), 0 0 20px rgba(0, 243, 255, 0.08); }
-                50% { box-shadow: inset 0 0 24px rgba(0, 243, 255, 0.12), 0 0 36px rgba(0, 243, 255, 0.18); }
-            }
-
-            @keyframes dots {
-                0% { content: ""; }
-                25% { content: "."; }
-                50% { content: ".."; }
-                75% { content: "..."; }
-            }
-
-            @keyframes fade-in-text {
-                from { opacity: 0; transform: translateY(6px); }
-                to { opacity: 1; transform: translateY(0); }
-            }
-
             @keyframes robot-spin {
                 from { transform: rotate(0deg); }
                 to { transform: rotate(360deg); }
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                *,
+                *::before,
+                *::after {
+                    animation: none !important;
+                    transition: none !important;
+                }
             }
 
             @media (max-width: 899px) {
@@ -1297,11 +1143,6 @@ def home():
         </style>
     </head>
     <body>
-        <div class="background-orbs" aria-hidden="true">
-            <div class="orb orb-violet"></div>
-            <div class="orb orb-fuchsia"></div>
-            <div class="orb orb-mix"></div>
-        </div>
         <div class="page-shell">
             <section class="panel hero top-bar">
                 <div class="topbar-row">
