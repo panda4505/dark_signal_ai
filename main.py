@@ -689,7 +689,7 @@ def home():
             .app-title {
                 color: var(--text-primary);
                 font-family: "Outfit", sans-serif;
-                font-size: 14px;
+                font-size: 20px;
                 font-weight: 700;
                 letter-spacing: 0.16em;
                 text-transform: uppercase;
@@ -714,7 +714,7 @@ def home():
 
             @media (min-width: 900px) {
                 .content-grid {
-                    grid-template-columns: minmax(0, 42fr) minmax(0, 58fr);
+                    grid-template-columns: minmax(0, 40fr) minmax(0, 60fr);
                 }
             }
 
@@ -977,14 +977,14 @@ def home():
             }
 
             pre {
-                min-height: 400px;
+                min-height: calc(100vh - 240px);
                 padding: 18px;
                 border: 1px solid var(--border);
                 border-radius: 12px;
                 background-color: var(--console-bg);
                 color: #e1dbef;
                 font-family: var(--font-mono);
-                font-size: 13px;
+                font-size: 15px;
                 line-height: 1.7;
                 white-space: pre-wrap;
                 word-break: break-word;
