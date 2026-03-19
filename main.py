@@ -1038,164 +1038,125 @@ def home():
         </div>
 
         <script>
-            let uploadedFile = null;
+document.addEventListener("DOMContentLoaded", () => {
+    let uploadedFile = null;
 
-            const dropZone = document.getElementById("drop-zone");
-            const fileStatus = document.getElementById("file-status");
-            const responseState = document.getElementById("response-state");
-            const output = document.getElementById("output");
-            const promptInput = document.getElementById("prompt");
-            const sendButton = document.getElementById("send-btn");
+    const dropZone = document.getElementById("drop-zone");
+    const fileStatus = document.getElementById("file-status");
+    const responseState = document.getElementById("response-state");
+    const output = document.getElementById("output");
+    const promptInput = document.getElementById("prompt");
+    const sendButton = document.getElementById("send-btn");
+    const fileInput = document.getElementById("file-input");
 
-            function escapeHtml(text) {
-                return text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+    function escapeHtml(text) {
+        return text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+    }
+
+    function renderDropZone() {
+        if (uploadedFile) {
+            dropZone.innerHTML = '<div class="drop-inline"><div class="drop-main"><div class="drop-message">File attached <span class="filename">' + escapeHtml(uploadedFile.name) + '</span></div></div><div class="drop-badge">Attached</div></div>';
+            return;
+        }
+        dropZone.innerHTML = '<div class="drop-inline"><div class="drop-main"><div class="drop-message">Drop file or click to attach</div></div><div class="drop-badge">Any format</div></div>';
+    }
+
+    function setFileStatus(text, stateClass) {
+        fileStatus.textContent = text;
+        fileStatus.className = "meta-pill " + stateClass;
+    }
+
+    function setResponseState(text, stateClass) {
+        responseState.textContent = text;
+        responseState.className = "signal " + stateClass;
+    }
+
+    async function handleFile(file) {
+        dropZone.classList.add("busy");
+        setFileStatus("Uploading file", "busy");
+        try {
+            const form = new FormData();
+            form.append("file", file);
+            const res = await fetch("/upload", { method: "POST", body: form });
+            const data = await res.json();
+            if (data.error) {
+                uploadedFile = null;
+                output.textContent = "Upload failed: " + data.error;
+                setFileStatus("Upload failed", "idle");
+            } else {
+                uploadedFile = { path: data.path, name: data.filename };
+                setFileStatus("Attached: " + data.filename, "ready");
             }
-
-            function renderDropZone() {
-                if (uploadedFile) {
-                    dropZone.innerHTML = `
-                        <div class="drop-inline">
-                            <div class="drop-main">
-                                <svg class="drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <path d="M12 16V4"></path>
-                                    <path d="M8 8l4-4 4 4"></path>
-                                    <path d="M20 15v3a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3"></path>
-                                </svg>
-                                <div class="drop-message">File attached<span class="filename">${escapeHtml(uploadedFile.name)}</span></div>
-                            </div>
-                            <div class="drop-badge">Attached</div>
-                        </div>
-                    `;
-                    return;
-                }
-
-                dropZone.innerHTML = `
-                    <div class="drop-inline">
-                        <div class="drop-main">
-                            <svg class="drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M12 16V4"></path>
-                                <path d="M8 8l4-4 4 4"></path>
-                                <path d="M20 15v3a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3"></path>
-                            </svg>
-                            <div class="drop-message">Drop file or click to attach</div>
-                        </div>
-                        <div class="drop-badge">Any format</div>
-                    </div>
-                `;
-            }
-
-            function setFileStatus(text, stateClass) {
-                fileStatus.textContent = text;
-                fileStatus.className = "meta-pill " + stateClass;
-            }
-
-            function setResponseState(text, stateClass) {
-                responseState.textContent = text;
-                responseState.className = "signal " + stateClass;
-            }
-
+        } catch (err) {
+            uploadedFile = null;
+            output.textContent = "Upload failed.";
+            setFileStatus("Upload failed", "idle");
+        } finally {
             renderDropZone();
+            dropZone.classList.remove("busy");
+        }
+    }
 
-            dropZone.addEventListener("dragover", e => { e.preventDefault(); dropZone.classList.add("drag-over"); });
-            dropZone.addEventListener("dragleave", () => dropZone.classList.remove("drag-over"));
-            dropZone.addEventListener("drop", e => {
-                e.preventDefault(); dropZone.classList.remove("drag-over");
-                if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
-            });
-
-            document.getElementById("file-input").addEventListener("change", e => {
-                if (e.target.files.length) handleFile(e.target.files[0]);
-            });
-
-            output.addEventListener("animationend", () => output.classList.remove("output-ready"));
-            sendButton.addEventListener("click", sendPrompt);
-
-            async function handleFile(file) {
-                dropZone.classList.add("busy");
-                dropZone.innerHTML = `
-                    <div class="drop-inline">
-                        <div class="drop-main">
-                            <svg class="drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M12 16V4"></path>
-                                <path d="M8 8l4-4 4 4"></path>
-                                <path d="M20 15v3a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3"></path>
-                            </svg>
-                            <div class="drop-message">Uploading<span class="filename">${escapeHtml(file.name)}</span></div>
-                        </div>
-                        <div class="drop-badge">Syncing</div>
-                    </div>
-                `;
-                setFileStatus("Uploading file", "busy");
-                const form = new FormData();
-                form.append("file", file);
-                const res = await fetch("/upload", { method: "POST", body: form });
-                const data = await res.json();
-
-                if (data.error) {
-                    uploadedFile = null;
-                    renderDropZone();
-                    output.textContent = "Upload failed: " + data.error;
-                    setFileStatus("Upload failed", "idle");
-                } else {
-                    uploadedFile = { path: data.path, name: data.filename };
-                    renderDropZone();
-                    setFileStatus("Attached: " + data.filename, "ready");
-                }
-                dropZone.classList.remove("busy");
+    async function sendPrompt() {
+        const prompt = promptInput.value;
+        if (!prompt.trim()) {
+            output.textContent = "Please enter a prompt first.";
+            setResponseState("No prompt entered", "idle");
+            return;
+        }
+        sendButton.disabled = true;
+        sendButton.classList.add("button-processing");
+        sendButton.textContent = "Analyzing...";
+        output.textContent = "";
+        output.classList.add("output-loading");
+        output.innerHTML = '<span class="robot-loader"><span class="loader-ring"></span><span class="loader-text">The Robot is thinking...</span></span>';
+        setResponseState("Analyzing", "busy");
+        try {
+            const body = { prompt };
+            if (uploadedFile) {
+                body.file_path = uploadedFile.path;
+                body.file_name = uploadedFile.name;
             }
-
-            async function sendPrompt() {
-                const btn = sendButton;
-                const prompt = promptInput.value;
-                console.log("sendPrompt fired", promptInput.value);
-                if (!prompt.trim()) {
-                    output.textContent = "Please enter a prompt first.";
-                    setResponseState("No prompt entered", "idle");
-                    return;
-                }
-
-                btn.disabled = true;
-                btn.classList.add("button-processing");
-                btn.innerHTML = '<span class="typing-dots">Analyzing</span>';
-                output.classList.remove("output-ready");
-                output.classList.remove("typing-dots");
-                output.classList.add("output-loading");
-                output.textContent = "";
-                output.innerHTML = '<span class="robot-loader"><span class="loader-ring" aria-hidden="true"></span><span class="loader-text">The Robot is thinking...</span></span>';
-                setResponseState("Analyzing", "busy");
-
-                try {
-                    const body = { prompt };
-                    if (uploadedFile) {
-                        body.file_path = uploadedFile.path;
-                        body.file_name = uploadedFile.name;
-                    }
-
-                    const res = await fetch("/ask", {
-                        method: "POST",
-                        headers: {"Content-Type": "application/json"},
-                        body: JSON.stringify(body)
-                    });
-                    const data = await res.json();
-                    if (data.reasoning) {
-                        output.textContent = "💭 Thinking:\n" + data.reasoning + "\n\n---\n\n" + (data.answer || data.error);
-                    } else {
-                        output.textContent = data.answer || data.error;
-                    }
-                    setResponseState("Response ready", "ready");
-                } catch (error) {
-                    output.textContent = "Request failed. Please try again.";
-                    setResponseState("Request failed", "idle");
-                } finally {
-                    output.classList.remove("typing-dots");
-                    output.classList.remove("output-loading");
-                    btn.classList.remove("button-processing");
-                    output.classList.add("output-ready");
-                    btn.textContent = "Run Analysis";
-                    btn.disabled = false;
-                }
+            const res = await fetch("/ask", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            output.classList.remove("output-loading");
+            if (data.reasoning) {
+                output.textContent = "Thinking:\n" + data.reasoning + "\n\n---\n\n" + (data.answer || data.error || "");
+            } else {
+                output.textContent = data.answer || data.error || "No response.";
             }
-        </script>
+            setResponseState("Response ready", "ready");
+        } catch (error) {
+            output.classList.remove("output-loading");
+            output.textContent = "Request failed. Please try again.";
+            setResponseState("Request failed", "idle");
+        } finally {
+            sendButton.classList.remove("button-processing");
+            sendButton.textContent = "Run Analysis";
+            sendButton.disabled = false;
+        }
+    }
+
+    renderDropZone();
+
+    dropZone.addEventListener("click", () => fileInput.click());
+    dropZone.addEventListener("dragover", e => { e.preventDefault(); dropZone.classList.add("drag-over"); });
+    dropZone.addEventListener("dragleave", () => dropZone.classList.remove("drag-over"));
+    dropZone.addEventListener("drop", e => {
+        e.preventDefault();
+        dropZone.classList.remove("drag-over");
+        if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+    });
+    fileInput.addEventListener("change", e => {
+        if (e.target.files.length) handleFile(e.target.files[0]);
+    });
+    sendButton.addEventListener("click", sendPrompt);
+});
+</script>
     </body>
     </html>
     """
