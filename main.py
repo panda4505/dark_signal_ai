@@ -25,7 +25,7 @@ app = FastAPI()
 
 TEXT_MODEL = os.getenv("DEEPSEEK_MODEL", "deepseek-reasoner")
 VISION_MODEL = os.getenv("DEEPSEEK_VISION_MODEL", TEXT_MODEL)
-API_TIMEOUT_SECONDS = 60
+API_TIMEOUT_SECONDS = 900
 
 client = OpenAI(
     api_key=os.getenv("DEEPSEEK_API_KEY"),
@@ -1360,7 +1360,6 @@ document.addEventListener("DOMContentLoaded", () => {
     let isAnalyzing = false;
 
     const UPLOAD_TIMEOUT_MS = 60000;
-    const ASK_TIMEOUT_MS = 60000;
 
     const dropZone = document.getElementById("drop-zone");
     const fileStatus = document.getElementById("file-status");
@@ -1566,11 +1565,11 @@ document.addEventListener("DOMContentLoaded", () => {
             if (uploadedFile) {
                 body.file_id = uploadedFile.id;
             }
-            const res = await fetchWithTimeout("/ask", {
+            const res = await fetch("/ask", {
                 method: "POST",
                 headers: {"Content-Type": "application/json"},
                 body: JSON.stringify(body)
-            }, ASK_TIMEOUT_MS);
+            });
             const data = await readJsonResponse(res);
             output.classList.remove("output-loading");
             output.textContent = data.answer || data.error || "No response.";
