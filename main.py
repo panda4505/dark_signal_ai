@@ -351,31 +351,33 @@ def home():
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
             :root {
-                --bg: #05030a;
-                --bg-soft: rgba(20, 14, 34, 0.82);
-                --panel: rgba(16, 12, 29, 0.86);
-                --panel-strong: rgba(24, 17, 43, 0.94);
-                --border: rgba(178, 120, 255, 0.24);
-                --border-strong: rgba(206, 148, 255, 0.42);
-                --text: #f4ebff;
-                --muted: #b9accd;
-                --accent: #b145ff;
-                --accent-strong: #ff4fd8;
-                --accent-soft: rgba(177, 69, 255, 0.16);
-                --success: #7ef7c7;
-                --shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
+                --page-bg: #05040A;
+                --panel-bg: rgba(255, 255, 255, 0.045);
+                --panel-border: rgba(255, 255, 255, 0.10);
+                --panel-hover-bg: rgba(139, 92, 246, 0.08);
+                --panel-hover-border: rgba(139, 92, 246, 0.25);
+                --violet: rgb(139, 92, 246);
+                --violet-border: rgba(139, 92, 246, 0.30);
+                --violet-soft: rgba(139, 92, 246, 0.12);
+                --violet-focus: rgba(139, 92, 246, 0.40);
+                --fuchsia: rgb(232, 121, 249);
+                --emerald: rgb(16, 185, 129);
+                --text-primary: #ffffff;
+                --text-secondary: rgb(148, 163, 184);
+                --text-muted: rgba(148, 163, 184, 0.72);
+                --placeholder: rgb(100, 116, 139);
+                --field-bg: rgba(0, 0, 0, 0.20);
+                --field-border: rgba(255, 255, 255, 0.10);
+                --shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
             }
 
             * { box-sizing: border-box; margin: 0; padding: 0; }
 
             body {
                 min-height: 100vh;
-                font-family: "Space Grotesk", "Segoe UI", sans-serif;
-                color: var(--text);
-                background:
-                    radial-gradient(circle at top left, rgba(177, 69, 255, 0.28), transparent 30%),
-                    radial-gradient(circle at top right, rgba(255, 79, 216, 0.16), transparent 24%),
-                    linear-gradient(145deg, #05030a 0%, #0b0815 38%, #130d24 100%);
+                font-family: "Inter", system-ui, sans-serif;
+                color: var(--text-primary);
+                background: var(--page-bg);
                 overflow-x: hidden;
             }
 
@@ -383,60 +385,128 @@ def home():
                 content: "";
                 position: fixed;
                 inset: 0;
-                background-image:
-                    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-                background-size: 42px 42px;
-                mask-image: radial-gradient(circle at center, black 35%, transparent 90%);
+                background: radial-gradient(circle at top center, rgba(139, 92, 246, 0.16), transparent 58%);
                 pointer-events: none;
-                opacity: 0.35;
+                z-index: 0;
             }
 
             .page-shell {
-                width: min(980px, calc(100% - 32px));
+                width: min(1280px, calc(100% - 64px));
                 margin: 0 auto;
-                padding: 48px 0 56px;
+                padding: 32px 0;
                 position: relative;
+                z-index: 1;
+                display: grid;
+                gap: 24px;
+            }
+
+            .background-orbs {
+                position: fixed;
+                inset: 0;
+                pointer-events: none;
+                z-index: 0;
+            }
+
+            .orb {
+                position: absolute;
+                border-radius: 999px;
+                filter: blur(48px);
+                opacity: 0.18;
+            }
+
+            .orb-violet {
+                width: 420px;
+                height: 420px;
+                top: -120px;
+                left: -100px;
+                background: rgba(139, 92, 246, 0.95);
+            }
+
+            .orb-fuchsia {
+                width: 360px;
+                height: 360px;
+                top: 140px;
+                right: 80px;
+                background: rgba(232, 121, 249, 0.95);
+            }
+
+            .orb-mix {
+                width: 460px;
+                height: 460px;
+                right: 18%;
+                bottom: -140px;
+                background: linear-gradient(135deg, rgba(139, 92, 246, 0.95), rgba(232, 121, 249, 0.9));
             }
 
             .panel {
                 position: relative;
-                background: linear-gradient(180deg, rgba(28, 20, 48, 0.92), rgba(11, 8, 21, 0.92));
-                border: 1px solid var(--border);
-                border-radius: 24px;
+                background: var(--panel-bg);
+                border: 1px solid var(--panel-border);
+                border-radius: 28px;
                 box-shadow: var(--shadow);
-                backdrop-filter: blur(16px);
+                backdrop-filter: blur(24px);
+                -webkit-backdrop-filter: blur(24px);
+                transition: background 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+                animation: card-enter 0.45s ease both;
             }
+
+            .panel:hover {
+                background: var(--panel-hover-bg);
+                border-color: var(--panel-hover-border);
+            }
+
+            .hero { animation-delay: 0s; }
+            .composer { animation-delay: 0.08s; }
+            .output-panel { animation-delay: 0.16s; }
 
             .hero {
                 padding: 32px;
                 overflow: hidden;
-                animation: fade-up 0.7s ease-out both;
             }
 
-            .hero::after {
-                content: "";
-                position: absolute;
-                inset: auto -60px -90px auto;
-                width: 260px;
-                height: 260px;
-                border-radius: 50%;
-                background: radial-gradient(circle, rgba(177, 69, 255, 0.34), transparent 68%);
-                filter: blur(12px);
+            .hero-layout {
+                display: grid;
+                gap: 24px;
+            }
+
+            .hero-header {
+                display: flex;
+                align-items: center;
+                gap: 18px;
+                flex-wrap: wrap;
+            }
+
+            .icon-frame {
+                width: 48px;
+                height: 48px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 16px;
+                border: 1px solid rgba(139, 92, 246, 0.30);
+                background: rgba(139, 92, 246, 0.10);
+                box-shadow: 0 0 25px rgba(139, 92, 246, 0.25);
+                color: rgb(232, 121, 249);
+                flex-shrink: 0;
+            }
+
+            .icon-frame svg {
+                width: 22px;
+                height: 22px;
             }
 
             .eyebrow {
                 display: inline-flex;
                 align-items: center;
-                gap: 10px;
-                padding: 8px 14px;
+                gap: 8px;
+                padding: 8px 12px;
                 border-radius: 999px;
                 text-transform: uppercase;
-                letter-spacing: 0.16em;
+                letter-spacing: 0.24em;
                 font-size: 11px;
-                color: #f7dcff;
-                background: rgba(255, 255, 255, 0.04);
-                border: 1px solid rgba(255, 255, 255, 0.08);
+                color: var(--text-primary);
+                background: rgba(139, 92, 246, 0.10);
+                border: 1px solid rgba(139, 92, 246, 0.35);
             }
 
             .eyebrow::before {
@@ -444,43 +514,45 @@ def home():
                 width: 8px;
                 height: 8px;
                 border-radius: 50%;
-                background: linear-gradient(135deg, var(--accent-strong), var(--accent));
-                box-shadow: 0 0 16px rgba(255, 79, 216, 0.7);
+                background: var(--fuchsia);
+                box-shadow: 0 0 16px rgba(232, 121, 249, 0.55);
             }
 
             h1 {
-                margin-top: 18px;
-                font-size: clamp(2.2rem, 5vw, 4.4rem);
-                line-height: 0.94;
-                letter-spacing: -0.05em;
-                max-width: 10ch;
+                margin-top: 16px;
+                font-size: clamp(2.7rem, 5vw, 4.85rem);
+                line-height: 0.96;
+                letter-spacing: -0.02em;
+                font-weight: 600;
+                color: var(--text-primary);
+                max-width: 11ch;
             }
 
             .hero-copy {
-                max-width: 620px;
-                margin-top: 18px;
-                font-size: 16px;
+                max-width: 720px;
+                font-size: 15px;
                 line-height: 1.7;
-                color: var(--muted);
+                color: var(--text-secondary);
             }
 
             .hero-meta {
                 display: flex;
                 flex-wrap: wrap;
                 gap: 12px;
-                margin-top: 26px;
             }
 
             .meta-pill, .signal {
                 display: inline-flex;
                 align-items: center;
-                gap: 10px;
+                gap: 8px;
                 border-radius: 999px;
-                padding: 10px 14px;
-                font-size: 13px;
-                color: #f4eaff;
-                background: rgba(255, 255, 255, 0.04);
-                border: 1px solid rgba(255, 255, 255, 0.08);
+                padding: 8px 12px;
+                font-size: 11px;
+                letter-spacing: 0.24em;
+                text-transform: uppercase;
+                color: var(--text-primary);
+                background: rgba(139, 92, 246, 0.10);
+                border: 1px solid rgba(139, 92, 246, 0.35);
             }
 
             .meta-pill::before, .signal::before {
@@ -488,37 +560,43 @@ def home():
                 width: 8px;
                 height: 8px;
                 border-radius: 50%;
-                background: var(--success);
-                box-shadow: 0 0 12px rgba(126, 247, 199, 0.65);
+                background: var(--violet);
+                box-shadow: 0 0 16px rgba(139, 92, 246, 0.45);
             }
 
             .meta-pill.idle::before, .signal.idle::before {
-                background: rgba(255, 255, 255, 0.35);
-                box-shadow: none;
+                background: var(--violet);
+                box-shadow: 0 0 16px rgba(139, 92, 246, 0.35);
             }
 
             .meta-pill.busy::before, .signal.busy::before {
-                background: #ffd166;
-                box-shadow: 0 0 12px rgba(255, 209, 102, 0.65);
+                background: var(--fuchsia);
+                box-shadow: 0 0 16px rgba(232, 121, 249, 0.45);
+            }
+
+            .meta-pill.ready,
+            .signal.ready {
+                background: rgba(16, 185, 129, 0.10);
+                border-color: rgba(16, 185, 129, 0.35);
+            }
+
+            .meta-pill.ready::before,
+            .signal.ready::before {
+                background: var(--emerald);
+                box-shadow: 0 0 16px rgba(16, 185, 129, 0.45);
             }
 
             .composer,
             .output-panel {
-                margin-top: 22px;
-                padding: 26px;
-                animation: fade-up 0.85s ease-out both;
-            }
-
-            .output-panel {
-                animation-delay: 0.08s;
+                padding: 28px;
             }
 
             .section-label {
                 display: block;
                 margin-bottom: 12px;
-                color: #ded0f4;
-                font-size: 13px;
-                letter-spacing: 0.08em;
+                color: var(--text-secondary);
+                font-size: 12px;
+                letter-spacing: 0.22em;
                 text-transform: uppercase;
             }
 
@@ -527,53 +605,47 @@ def home():
                 min-height: 150px;
                 padding: 18px 20px;
                 font: inherit;
-                font-size: 16px;
+                font-size: 15px;
                 line-height: 1.6;
-                color: var(--text);
+                color: var(--text-primary);
                 resize: vertical;
-                border-radius: 20px;
-                border: 1px solid rgba(195, 150, 255, 0.22);
-                background:
-                    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02)),
-                    var(--bg-soft);
+                border-radius: 16px;
+                border: 1px solid var(--field-border);
+                background: var(--field-bg);
                 outline: none;
-                transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+                transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
             }
 
             textarea:focus {
-                border-color: var(--border-strong);
-                box-shadow: 0 0 0 4px rgba(177, 69, 255, 0.14);
-                transform: translateY(-1px);
+                border-color: var(--violet-focus);
+                background: rgba(139, 92, 246, 0.06);
+                box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.12), 0 0 24px rgba(139, 92, 246, 0.14);
             }
 
             textarea::placeholder {
-                color: #8d7da8;
+                color: var(--placeholder);
             }
 
             .drop-zone {
                 margin-top: 16px;
-                border-radius: 22px;
-                border: 1px dashed rgba(216, 175, 255, 0.36);
-                background:
-                    linear-gradient(135deg, rgba(177, 69, 255, 0.12), rgba(255, 79, 216, 0.06)),
-                    rgba(255, 255, 255, 0.02);
+                border-radius: 16px;
+                border: 1px solid var(--field-border);
+                background: var(--field-bg);
                 padding: 24px;
                 cursor: pointer;
-                transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+                transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
             }
 
             .drop-zone:hover,
             .drop-zone.drag-over {
-                transform: translateY(-2px);
-                border-color: rgba(239, 198, 255, 0.75);
-                box-shadow: 0 16px 30px rgba(116, 32, 179, 0.25);
-                background:
-                    linear-gradient(135deg, rgba(177, 69, 255, 0.18), rgba(255, 79, 216, 0.1)),
-                    rgba(255, 255, 255, 0.03);
+                border-color: var(--violet-focus);
+                background: rgba(139, 92, 246, 0.06);
+                box-shadow: 0 0 28px rgba(139, 92, 246, 0.12);
             }
 
             .drop-zone.busy {
-                border-style: solid;
+                border-color: rgba(232, 121, 249, 0.35);
+                background: rgba(139, 92, 246, 0.08);
             }
 
             .drop-top {
@@ -586,12 +658,13 @@ def home():
 
             .drop-title {
                 font-size: 18px;
-                font-weight: 700;
+                font-weight: 600;
                 letter-spacing: -0.02em;
+                color: var(--text-primary);
             }
 
             .drop-copy {
-                color: var(--muted);
+                color: var(--text-secondary);
                 font-size: 14px;
                 line-height: 1.6;
             }
@@ -600,20 +673,19 @@ def home():
                 flex-shrink: 0;
                 padding: 8px 12px;
                 border-radius: 999px;
-                background: rgba(255, 255, 255, 0.06);
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                font-size: 12px;
-                letter-spacing: 0.08em;
+                background: rgba(139, 92, 246, 0.10);
+                border: 1px solid rgba(139, 92, 246, 0.35);
+                font-size: 11px;
+                letter-spacing: 0.24em;
                 text-transform: uppercase;
-                color: #f0dcff;
+                color: var(--text-primary);
             }
 
             .filename {
                 display: inline-block;
                 margin-top: 8px;
-                font-weight: 700;
-                color: #ffffff;
-                text-shadow: 0 0 18px rgba(177, 69, 255, 0.5);
+                font-weight: 600;
+                color: var(--text-primary);
                 word-break: break-word;
             }
 
@@ -626,25 +698,36 @@ def home():
             button {
                 padding: 14px 24px;
                 min-width: 180px;
-                border: 0;
+                border: 1px solid rgba(139, 92, 246, 0.30);
                 border-radius: 16px;
                 font: inherit;
-                font-weight: 700;
+                font-weight: 600;
                 letter-spacing: 0.02em;
-                color: #fff;
+                color: rgb(237, 233, 254);
                 cursor: pointer;
-                background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-                box-shadow:
-                    0 12px 28px rgba(177, 69, 255, 0.35),
-                    inset 0 1px 0 rgba(255, 255, 255, 0.18);
-                transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+                background: rgba(139, 92, 246, 0.15);
+                box-shadow: 0 0 24px rgba(139, 92, 246, 0.25);
+                transition: background 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, transform 0.18s ease, opacity 0.18s ease;
             }
 
             button:hover:not(:disabled) {
+                background: rgba(139, 92, 246, 0.20);
+                border-color: rgba(139, 92, 246, 0.40);
+                box-shadow: 0 0 36px rgba(139, 92, 246, 0.30);
                 transform: translateY(-1px);
-                box-shadow:
-                    0 16px 32px rgba(177, 69, 255, 0.42),
-                    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+            }
+
+            .secondary-button {
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.10);
+                color: var(--text-primary);
+                box-shadow: none;
+            }
+
+            .secondary-button:hover:not(:disabled) {
+                background: rgba(255, 255, 255, 0.06);
+                border-color: rgba(139, 92, 246, 0.30);
+                box-shadow: 0 0 24px rgba(139, 92, 246, 0.12);
             }
 
             button:disabled {
@@ -663,7 +746,9 @@ def home():
 
             .output-title {
                 font-size: 24px;
-                letter-spacing: -0.03em;
+                letter-spacing: -0.02em;
+                font-weight: 600;
+                color: var(--text-primary);
             }
 
             pre {
@@ -671,21 +756,19 @@ def home():
                 white-space: pre-wrap;
                 word-wrap: break-word;
                 padding: 20px;
-                border-radius: 18px;
-                border: 1px solid rgba(201, 159, 255, 0.14);
-                background:
-                    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015)),
-                    var(--panel-strong);
-                color: #efe6ff;
-                font-family: "IBM Plex Mono", "SFMono-Regular", monospace;
+                border-radius: 16px;
+                border: 1px solid var(--field-border);
+                background: var(--field-bg);
+                color: var(--text-secondary);
+                font-family: "Inter", system-ui, sans-serif;
+                font-size: 14px;
                 line-height: 1.7;
-                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
             }
 
-            @keyframes fade-up {
+            @keyframes card-enter {
                 from {
                     opacity: 0;
-                    transform: translateY(18px);
+                    transform: translateY(16px);
                 }
                 to {
                     opacity: 1;
@@ -693,23 +776,25 @@ def home():
                 }
             }
 
+            @media (max-width: 900px) {
+                .hero-header,
+                .output-header,
+                .drop-top {
+                    flex-direction: column;
+                    align-items: flex-start;
+                }
+            }
+
             @media (max-width: 700px) {
                 .page-shell {
-                    width: min(100% - 20px, 980px);
-                    padding: 20px 0 28px;
+                    width: min(100% - 32px, 1280px);
+                    padding: 24px 0;
                 }
 
                 .hero,
                 .composer,
                 .output-panel {
-                    padding: 20px;
-                    border-radius: 20px;
-                }
-
-                .drop-top,
-                .output-header {
-                    flex-direction: column;
-                    align-items: flex-start;
+                    padding: 24px;
                 }
 
                 .actions {
@@ -727,16 +812,33 @@ def home():
         </style>
     </head>
     <body>
+        <div class="background-orbs" aria-hidden="true">
+            <div class="orb orb-violet"></div>
+            <div class="orb orb-fuchsia"></div>
+            <div class="orb orb-mix"></div>
+        </div>
         <div class="page-shell">
             <section class="panel hero">
-                <div class="eyebrow">Secure Analysis Console</div>
-                <h1>Dark Signal AI</h1>
-                <p class="hero-copy">
-                    Drop in a file, write a prompt, and check out the answer inside a cleaner cyber-inspired workspace.
-                </p>
-                <div class="hero-meta">
-                    <span class="meta-pill">FastAPI + AI Workflow</span>
-                    <span id="file-status" class="meta-pill idle">No file attached</span>
+                <div class="hero-layout">
+                    <div class="hero-header">
+                        <div class="icon-frame" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3z"></path>
+                                <path d="M9.5 12.5l1.7 1.7 3.3-4"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="eyebrow">Secure Analysis Console</div>
+                            <h1>Dark Signal AI</h1>
+                        </div>
+                    </div>
+                    <p class="hero-copy">
+                        Drop in a file, write a prompt, and check out the answer inside a cleaner cyber-inspired workspace.
+                    </p>
+                    <div class="hero-meta">
+                        <span class="meta-pill">FastAPI + AI Workflow</span>
+                        <span id="file-status" class="meta-pill idle">No file attached</span>
+                    </div>
                 </div>
             </section>
 
