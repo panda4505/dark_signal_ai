@@ -1125,7 +1125,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const data = await res.json();
             output.classList.remove("output-loading");
             if (data.reasoning) {
-                output.textContent = "Thinking:\n" + data.reasoning + "\n\n---\n\n" + (data.answer || data.error || "");
+                output.textContent = "Thinking:\\n" + data.reasoning + "\\n\\n---\\n\\n" + (data.answer || data.error || "");
             } else {
                 output.textContent = data.answer || data.error || "No response.";
             }
