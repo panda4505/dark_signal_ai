@@ -5,6 +5,7 @@ from openai import OpenAI
 from dotenv import load_dotenv
 from openpyxl import load_workbook
 import base64
+import csv
 import fitz
 import json
 import logging
@@ -255,6 +256,11 @@ IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "webp", "bmp", "gif", "tif", "tiff"}
 LEGACY_OFFICE_EXTENSIONS = {"doc", "xls", "ppt"}
 MAX_EXTRACTED_CHARS = 50000
 MAX_IMAGE_BYTES = 8 * 1024 * 1024
+NEWLINE = chr(10)
+LARGE_TABLE_ROW_THRESHOLD = 500
+TABLE_SAMPLE_HEAD_ROWS = 10
+TABLE_SAMPLE_TAIL_ROWS = 5
+COLUMN_SAMPLE_VALUE_LIMIT = 5
 
 
 def limit_text(text: str) -> str:
@@ -274,6 +280,188 @@ def get_extension(file_path: str, file_name: str | None) -> str:
 
 def with_fallback_text(text: str, fallback: str) -> str:
     return limit_text(text) or fallback
+
+
+def normalize_tabular_row(values) -> list[str]:
+    row = []
+
+    for value in values:
+        row.append("" if value is None else str(value))
+
+    while row and not row[-1].strip():
+        row.pop()
+
+    return row
+
+
+def row_has_content(row: list[str]) -> bool:
+    return any(value.strip() for value in row)
+
+
+def format_tabular_row(row: list[str]) -> str:
+    return ",".join(row).rstrip(",")
+
+
+def get_column_name(header_row: list[str], index: int) -> str:
+    if index < len(header_row) and header_row[index].strip():
+        return header_row[index].strip()
+    return "Column " + str(index + 1)
+
+
+def collect_sample_values(values: list[str]) -> list[str]:
+    samples = []
+    seen = set()
+
+    for value in values:
+        if value in seen:
+            continue
+        seen.add(value)
+        samples.append(value)
+        if len(samples) >= COLUMN_SAMPLE_VALUE_LIMIT:
+            break
+
+    return samples
+
+
+def parse_numeric_value(value: str) -> float | None:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def format_numeric_value(value: float) -> str:
+    return f"{value:g}"
+
+
+def build_column_statistics_line(column_name: str, values: list[str]) -> str:
+    unique_values = len(set(values))
+    sample_values = collect_sample_values(values)
+    line = (
+        "- "
+        + column_name
+        + ": non-empty="
+        + str(len(values))
+        + ", unique="
+        + str(unique_values)
+        + ", samples="
+        + json.dumps(sample_values, ensure_ascii=False)
+    )
+
+    if values:
+        numeric_values = []
+        is_numeric_column = True
+
+        for value in values:
+            numeric_value = parse_numeric_value(value)
+            if numeric_value is None:
+                is_numeric_column = False
+                break
+            numeric_values.append(numeric_value)
+
+        if is_numeric_column and numeric_values:
+            average = sum(numeric_values) / len(numeric_values)
+            line = (
+                line
+                + ", min="
+                + format_numeric_value(min(numeric_values))
+                + ", max="
+                + format_numeric_value(max(numeric_values))
+                + ", average="
+                + format_numeric_value(average)
+            )
+
+    return line
+
+
+def build_table_statistics_block(display_label: str, rows: list[list[str]]) -> str:
+    column_count = max((len(row) for row in rows), default=0)
+    lines = [
+        display_label,
+        "Rows: " + str(len(rows)),
+        "Columns: " + str(column_count),
+    ]
+
+    if not rows or column_count == 0:
+        lines.append("Column names: [No columns found]")
+        lines.append("Column statistics:")
+        lines.append("- No data rows available.")
+        return NEWLINE.join(lines)
+
+    header_row = rows[0]
+    column_names = [get_column_name(header_row, index) for index in range(column_count)]
+    lines.append("Column names: " + ", ".join(column_names))
+    lines.append("Column statistics:")
+
+    data_rows = rows[1:]
+    if not data_rows:
+        lines.append("- No data rows available.")
+        return NEWLINE.join(lines)
+
+    for index, column_name in enumerate(column_names):
+        values = []
+        for row in data_rows:
+            value = row[index].strip() if index < len(row) else ""
+            if value:
+                values.append(value)
+
+        lines.append(build_column_statistics_line(column_name, values))
+
+    return NEWLINE.join(lines)
+
+
+def build_raw_sample_sections(tables: list[dict]) -> str:
+    all_rows = []
+
+    for table in tables:
+        raw_prefix = table.get("raw_prefix", "")
+        for row in table["rows"]:
+            row_text = format_tabular_row(row)
+            all_rows.append(raw_prefix + row_text if raw_prefix else row_text)
+
+    if not all_rows:
+        return ""
+
+    lines = ["First 10 rows (raw text):"]
+    lines.extend(all_rows[:TABLE_SAMPLE_HEAD_ROWS])
+    lines.append("")
+    lines.append("Last 5 rows (raw text):")
+    lines.extend(all_rows[-TABLE_SAMPLE_TAIL_ROWS:])
+    return NEWLINE.join(lines)
+
+
+def build_large_table_analysis(tables: list[dict]) -> str:
+    total_rows = sum(len(table["rows"]) for table in tables)
+    total_columns = max(
+        (max((len(row) for row in table["rows"]), default=0) for table in tables),
+        default=0,
+    )
+    summary = (
+        "=== LARGE FILE ANALYSIS ==="
+        + NEWLINE
+        + "This file has "
+        + str(total_rows)
+        + " rows and "
+        + str(total_columns)
+        + " columns. Full raw data cannot be shown. Below is a statistical summary and sample data."
+        + NEWLINE
+        + NEWLINE
+    )
+    statistics_blocks = [
+        build_table_statistics_block(table["display_label"], table["rows"])
+        for table in tables
+    ]
+    raw_sample_sections = build_raw_sample_sections(tables)
+
+    if statistics_blocks:
+        summary = summary + (NEWLINE + NEWLINE).join(statistics_blocks)
+
+    if raw_sample_sections:
+        if statistics_blocks:
+            summary = summary + NEWLINE + NEWLINE
+        summary = summary + raw_sample_sections
+
+    return summary
 
 
 def natural_sort_key(text: str):
@@ -316,26 +504,69 @@ def extract_pdf_text(file_path: str) -> str:
 
 def extract_plain_text(file_path: str) -> str:
     with open(file_path, "r", encoding="utf-8", errors="replace") as f:
-        return with_fallback_text(f.read(), "[No extractable text found in file]")
+        text = f.read()
+
+    if get_extension(file_path, None) != "csv":
+        return with_fallback_text(text, "[No extractable text found in file]")
+
+    rows = []
+    with open(file_path, "r", encoding="utf-8", errors="replace", newline="") as f:
+        reader = csv.reader(f)
+        for row in reader:
+            normalized_row = normalize_tabular_row(row)
+            if row_has_content(normalized_row):
+                rows.append(normalized_row)
+
+    if len(rows) > LARGE_TABLE_ROW_THRESHOLD:
+        summary = build_large_table_analysis(
+            [
+                {
+                    "display_label": "[CSV]",
+                    "raw_prefix": "",
+                    "rows": rows,
+                }
+            ]
+        )
+        return with_fallback_text(summary, "[No extractable text found in file]")
+
+    return with_fallback_text(text, "[No extractable text found in file]")
 
 
 def extract_spreadsheet_text(file_path: str) -> str:
     workbook = load_workbook(file_path, data_only=True)
     try:
         sections = []
+        tables = []
 
         for sheet in workbook.worksheets:
             rows = []
+            raw_rows = []
             for row in sheet.iter_rows(values_only=True):
-                values = ["" if value is None else str(value) for value in row]
-                if any(value for value in values):
-                    rows.append(",".join(values).rstrip(","))
-            sheet_text = "\n".join(rows).strip()
+                values = normalize_tabular_row(row)
+                if row_has_content(values):
+                    rows.append(values)
+                    raw_rows.append(format_tabular_row(values))
+            sheet_text = NEWLINE.join(raw_rows).strip()
             if sheet_text:
-                sections.append(f"[Sheet: {sheet.title}]\n{sheet_text}")
+                sections.append("[Sheet: " + sheet.title + "]" + NEWLINE + sheet_text)
+                tables.append(
+                    {
+                        "display_label": "[Sheet: " + sheet.title + "]",
+                        "raw_prefix": "[Sheet: " + sheet.title + "] ",
+                        "rows": rows,
+                    }
+                )
+
+        total_rows = sum(len(table["rows"]) for table in tables)
+        if total_rows > LARGE_TABLE_ROW_THRESHOLD:
+            summary = build_large_table_analysis(tables)
+            return with_fallback_text(
+                summary,
+                "[No extractable text found in spreadsheet]",
+            )
 
         return with_fallback_text(
-            "\n\n".join(sections),
+            (NEWLINE + NEWLINE).join(sections),
             "[No extractable text found in spreadsheet]",
         )
     finally:
