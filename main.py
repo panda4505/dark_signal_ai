@@ -550,14 +550,12 @@ def home():
             }
 
             .composer {
-                display: flex;
-                flex-direction: column;
             }
 
             .content-grid {
                 display: grid;
                 gap: 24px;
-                align-items: stretch;
+                align-items: start;
             }
 
             @media (min-width: 900px) {
@@ -733,7 +731,7 @@ def home():
 
             .actions {
                 display: block;
-                margin-top: auto;
+                margin-top: 16px;
                 padding-top: 24px;
                 width: 100%;
             }
@@ -805,7 +803,7 @@ def home():
             }
 
             pre {
-                min-height: calc(100vh - 200px);
+                min-height: 400px;
                 white-space: pre-wrap;
                 word-wrap: break-word;
                 padding: 20px;
